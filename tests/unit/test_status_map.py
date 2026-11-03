@@ -17,7 +17,6 @@ STATUS_CSV = Path(__file__).parents[1] / "fixtures" / "csv" / "all_status_titles
         ("Nationally Vulnerable", "NV"),
         ("Declining", "D"),
         ("Naturally Uncommon", "NU"),
-        ("Uncommon", "NU"),  # 2025 rename
         ("Not Threatened", "NT"),
         ("Data Deficient", "DD"),
         ("Nationally Increasing", "NI"),
@@ -50,6 +49,25 @@ def test_pending_codes_are_distinct_and_not_yet_rendered():
     assert len(set(pending)) == len(pending)
     rendered = WIKIPEDIA_NZTCS_CODES | {"SD", "GD", "SP", "RR"}
     assert not {c.upper() for c in pending} & {c.upper() for c in rendered}
+
+
+@pytest.mark.parametrize(
+    "criteria, code",
+    [
+        ("UNCn2j", "NU"),  # natural population state
+        ("UNCu2l", None),  # unnatural
+        ("UNCx2k", None),  # unknown is treated as unnatural
+        ("", None),
+    ],
+)
+def test_uncommon_is_naturally_uncommon_only_when_natural(criteria, code):
+    assert sm.code_for("Uncommon", criteria) == code
+
+
+def test_code_for_matches_status_code_for_other_titles():
+    for title, code in sm.STATUS_CODES.items():
+        assert sm.code_for(title, "") == code
+    assert sm.code_for("Vagrant") is None
 
 
 def test_unknown_title_raises():
