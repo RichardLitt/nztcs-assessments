@@ -4,5 +4,6 @@ ambiguous  3
 unmapped   3
 no_match   2
 skipped    2
+filtered   0
 accounted  12
 balanced   True

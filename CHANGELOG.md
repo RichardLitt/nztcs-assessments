@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `stats.txt` reported `balanced False` whenever `--species` or `--limit` was
+  used. Rows left out by those filters are now counted as `filtered`.
+
 ## [0.1.0] - unreleased
 
 First version.

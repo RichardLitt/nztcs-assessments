@@ -40,6 +40,7 @@ class Buckets:
     no_match: list[dict] = field(default_factory=list)
     skipped: list[dict] = field(default_factory=list)
     rows_in: int = 0
+    filtered: int = 0  # rows left out by --species / --limit
 
 
 def unified_diff(before: str, after: str, title: str) -> str:
@@ -128,7 +129,12 @@ def _write_tsv(path: Path, header: list[str], rows: list[dict]) -> None:
 
 def _write_stats(path: Path, b: Buckets) -> None:
     accounted = (
-        len(b.matched) + len(b.ambiguous) + len(b.unmapped) + len(b.no_match) + len(b.skipped)
+        len(b.matched)
+        + len(b.ambiguous)
+        + len(b.unmapped)
+        + len(b.no_match)
+        + len(b.skipped)
+        + b.filtered
     )
     lines = [
         f"rows_in    {b.rows_in}",
@@ -137,6 +143,7 @@ def _write_stats(path: Path, b: Buckets) -> None:
         f"unmapped   {len(b.unmapped)}",
         f"no_match   {len(b.no_match)}",
         f"skipped    {len(b.skipped)}",
+        f"filtered   {b.filtered}",
         f"accounted  {accounted}",
         f"balanced   {accounted == b.rows_in}",
     ]

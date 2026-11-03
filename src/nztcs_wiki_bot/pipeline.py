@@ -45,10 +45,12 @@ def run(rows: list[Row], client: WikiReader, config: PipelineConfig | None = Non
             )
             continue
         if config.species and config.species.lower() not in (clean.binomial or "").lower():
+            buckets.filtered += 1
             continue
         pending.append((row, clean))
 
-    if config.limit is not None:
+    if config.limit is not None and len(pending) > config.limit:
+        buckets.filtered += len(pending) - config.limit
         pending = pending[: config.limit]
 
     # 2. Resolve all binomials in batches (one network phase).
