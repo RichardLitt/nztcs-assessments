@@ -1,0 +1,12 @@
+speciesId,assessmentId,nztcsSpeciesName,commonName,conservationStatusTitle,categoryTitle,criteriaTitle,qualifiers,reportName,reportYear,popSizeTitle,popTrendTitle
+1,101,"<i>Aenetus virescens</i> (Doubleday, 1843)",pūriri moth,Nationally Vulnerable,Threatened,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+2,102,"Powelliphanta augusta Walker, 2003",,Nationally Endangered,Threatened,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+3,103,"Vanessa wrongus Author, 1900",,Declining,At Risk,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+4,104,"Aenetus disambigus Author, 1900",,Declining,At Risk,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+5,105,"Hepialus nobox Author, 1900",,Declining,At Risk,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+6,106,"Emptius pageus Author, 1900",,Declining,At Risk,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+7,107,"Nonexistent species Author, 1900",,Declining,At Risk,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+8,108,"Archyala sp. A (NZAC04239001; Mataroa)",,Data Deficient,Data Deficient,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+9,109,"""Acroclita"" discariana Philpott, 1930",,Nationally Vulnerable,Threatened,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+10,110,"Cateristis eustyla Meyrick, 1889",,Not assessed,Not assessed,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+11,111,"Novus statusus Author, 1900",,Brand New Category,Unknown,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,

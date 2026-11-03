@@ -25,6 +25,7 @@ import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from importlib.metadata import version
 from pathlib import Path
 
 import requests
@@ -34,6 +35,7 @@ from . import __version__
 API_URL = "https://en.wikipedia.org/w/api.php"
 PROJECT_URL = "https://github.com/RichardLitt/nztcs-assessments"
 CONTACT_ENV_VAR = "NZTCS_BOT_CONTACT"
+REQUESTS_VERSION = version("requests")
 MAXLAG = 5
 BATCH_SIZE = 50
 MIN_INTERVAL = 1.0  # seconds between requests (self-imposed floor)
@@ -87,7 +89,7 @@ def build_user_agent(contact: str) -> str:
     return (
         f"nztcs-wiki-bot/{__version__} "
         f"({PROJECT_URL}; {contact}) "
-        f"python-requests/{requests.__version__}"
+        f"python-requests/{REQUESTS_VERSION}"
     )
 
 

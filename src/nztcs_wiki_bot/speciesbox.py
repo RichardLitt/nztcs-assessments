@@ -42,7 +42,7 @@ class Infobox:
     name: str  # normalised lower-case template name
 
 
-def _norm_template_name(name: str) -> str:
+def _norm_template_name(name: str | Wikicode) -> str:
     return str(name).strip().lower()
 
 
@@ -62,7 +62,7 @@ def find_infobox(wikitext: str) -> Infobox | None:
     return None
 
 
-def _clean_param(value: str) -> str:
+def _clean_param(value: str | Wikicode) -> str:
     """Strip italics/links/whitespace from a template value for comparison.
 
     >>> _clean_param("''[[Aenetus]]''")
@@ -181,7 +181,7 @@ def _ref_defined(wikitext: str, ref_name: str) -> bool:
     return bool(pattern.search(wikitext))
 
 
-def _ref_name_in(value: str, ref_name: str) -> bool:
+def _ref_name_in(value: str | Wikicode, ref_name: str) -> bool:
     """Whether a status_ref value already cites ``ref_name`` (full or self-closing)."""
     return bool(re.search(r'name\s*=\s*"' + re.escape(ref_name) + r'"', str(value)))
 

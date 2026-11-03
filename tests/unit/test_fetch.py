@@ -46,7 +46,7 @@ def test_fetch_single_page_sends_user_agent():
     assert len(got) == 3
     assert len(seen) == 1
     assert seen[0]["reportId"] == 1176
-    ua = responses.calls[0].request.headers["User-Agent"]
+    ua = str(responses.calls[0].request.headers["User-Agent"])
     assert ua.startswith("nztcs-wiki-bot/") and fetch.PROJECT_URL in ua
 
 
