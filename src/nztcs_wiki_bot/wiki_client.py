@@ -1,7 +1,6 @@
 """Read-only MediaWiki API client for Wikipedia.
 
-Compliance with Wikimedia policy is baked in (see ``docs/design.md`` §
-"Wikipedia API policy compliance"):
+Compliance with Wikimedia policy is baked in (see ``docs/wikipedia-policy.md``):
 
 * **User-Agent** — informative string with the project URL, the *operator's*
   contact info (required; see :func:`resolve_contact`), and the word "bot".
