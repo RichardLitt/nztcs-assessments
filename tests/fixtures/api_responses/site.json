@@ -1,0 +1,16 @@
+{
+  "_comment": "A fake Wikipedia for end-to-end tests. 'redirects' maps requested title -> target; 'pages' maps existing title -> wikitext fixture name (null = page exists but has no revision content).",
+  "redirects": {
+    "Aenetus virescens": "Pūriri moth",
+    "Aenetus disambigus": "Aenetus",
+    "Hepialus nobox": "Nobox moth"
+  },
+  "pages": {
+    "Pūriri moth": "puriri_moth",
+    "Powelliphanta augusta": "powelliphanta_augusta",
+    "Vanessa wrongus": "wrong_taxon",
+    "Aenetus": "disambig",
+    "Nobox moth": "no_infobox",
+    "Emptius pageus": null
+  }
+}

@@ -1,0 +1,8 @@
+rows_in    11
+matched    2
+ambiguous  3
+unmapped   2
+no_match   2
+skipped    2
+accounted  11
+balanced   True

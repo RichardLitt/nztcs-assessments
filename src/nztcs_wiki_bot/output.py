@@ -88,8 +88,7 @@ def _write_matched(out: Path, entries: list[MatchEntry]) -> None:
         url = f"https://en.wikipedia.org/wiki/{e.title.replace(' ', '_')}"
         lines.append(f"## {e.binomial} → [{e.title}]({url})")
         lines.append("")
-        common = f" ({e.common_name})" if e.common_name else ""
-        lines.append(f"- **Common name:**{common or ' —'}")
+        lines.append(f"- **Common name:** {e.common_name or '—'}")
         lines.append(f"- **NZTCS status:** `{e.status_code}`")
         lines.append(f"- **Patch action:** {e.action}")
         lines.append("")

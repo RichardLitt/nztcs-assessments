@@ -8,11 +8,20 @@ be unit-tested against a fake :class:`~nztcs_wiki_bot.wiki_client.WikiClient`.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol
 
 from . import citation, name_cleaner, speciesbox, status_map
 from .csv_loader import Row, load_rows
 from .output import Buckets, MatchEntry, unified_diff
-from .wiki_client import WikiClient
+from .wiki_client import ResolvedTitle
+
+
+class WikiReader(Protocol):
+    """The read-only slice of :class:`~nztcs_wiki_bot.wiki_client.WikiClient` used here."""
+
+    def resolve_titles(self, titles: list[str]) -> dict[str, ResolvedTitle]: ...
+
+    def fetch_wikitext(self, title: str) -> str | None: ...
 
 
 @dataclass
@@ -21,7 +30,7 @@ class PipelineConfig:
     species: str | None = None  # filter to a single binomial substring
 
 
-def run(rows: list[Row], client: WikiClient, config: PipelineConfig | None = None) -> Buckets:
+def run(rows: list[Row], client: WikiReader, config: PipelineConfig | None = None) -> Buckets:
     """Run the full pipeline over ``rows`` and return populated :class:`Buckets`."""
     config = config or PipelineConfig()
     buckets = Buckets(rows_in=len(rows))
@@ -132,7 +141,7 @@ def run(rows: list[Row], client: WikiClient, config: PipelineConfig | None = Non
 
 
 def run_from_csv(
-    csv_path: str, client: WikiClient, config: PipelineConfig | None = None
+    csv_path: str, client: WikiReader, config: PipelineConfig | None = None
 ) -> Buckets:
     """Convenience: load the CSV then :func:`run`."""
     return run(load_rows(csv_path), client, config)

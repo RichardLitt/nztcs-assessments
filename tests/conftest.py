@@ -58,7 +58,7 @@ class FakeWikiClient:
         self.resolve_calls: list[list[str]] = []
         self.fetch_calls: list[str] = []
 
-    def resolve_titles(self, titles):
+    def resolve_titles(self, titles: list[str]) -> dict[str, ResolvedTitle]:
         self.resolve_calls.append(list(titles))
         out = {}
         for t in titles:
@@ -67,7 +67,7 @@ class FakeWikiClient:
             )
         return out
 
-    def fetch_wikitext(self, title):
+    def fetch_wikitext(self, title: str) -> str | None:
         self.fetch_calls.append(title)
         return self.pages.get(title)
 

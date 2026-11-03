@@ -18,13 +18,13 @@ import requests
 
 from . import __version__
 from .csv_loader import EXPECTED_FIELDS, strip_html
-from .wiki_client import PROJECT_URL
+from .wiki_client import PROJECT_URL, REQUESTS_VERSION
 
 API_URL = "https://nztcs.org.nz/rest/assessmentSearch"
 DEFAULT_REPORT_ID = 1176  # Lepidoptera 2025 (Hoare et al. 2026)
 PAGE_SIZE = 1000
 USER_AGENT = (
-    f"nztcs-wiki-bot/{__version__} (+{PROJECT_URL}) python-requests/{requests.__version__}"
+    f"nztcs-wiki-bot/{__version__} (+{PROJECT_URL}) python-requests/{REQUESTS_VERSION}"
 )
 
 # Cells that may carry HTML markup (mainly <i> italics) in the API response.
@@ -67,7 +67,7 @@ def fetch_assessments(
 def save_csv(assessments: list[dict], path: str | Path) -> int:
     """Write ``assessments`` to ``path`` as an NZTCS report CSV; return row count."""
     with Path(path).open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=EXPECTED_FIELDS)
+        writer: csv.DictWriter[str] = csv.DictWriter(f, fieldnames=EXPECTED_FIELDS)
         writer.writeheader()
         for a in assessments:
             row = {k: a.get(k, "") for k in EXPECTED_FIELDS}

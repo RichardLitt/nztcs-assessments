@@ -93,16 +93,33 @@ def test_limit_and_species_filter():
     assert [e.binomial for e in buckets.matched] == ["Aenetus virescens"]
 
 
-def test_no_write_endpoints_ever_called():
-    """Safety boundary: the fake client only exposes read methods, and the real
-    WikiClient guards action!=query. This asserts the pipeline never reaches for
-    a write."""
-    rows = [_row("1", "Aenetus virescens (Doubleday, 1843)", "Declining")]
+def test_limit_caps_resolvable_rows_after_skips():
+    rows = [
+        _row("1", "Archyala sp. A (NZAC04239001)"),  # skipped, doesn't count to limit
+        _row("2", "Aenetus virescens (Doubleday, 1843)"),
+        _row("3", "Agrotis admirationis Guenée, 1868"),
+    ]
+    client = FakeWikiClient()
+    buckets = run(rows, client, PipelineConfig(limit=1))
+    assert client.resolve_calls == [["Aenetus virescens"]]
+    assert len(buckets.skipped) == 1
+
+
+def test_already_current_status_is_ambiguous_not_matched():
+    rows = [_row("1", "Powelliphanta augusta Walker, 2003", "Nationally Critical")]
+    page = wikitext("powelliphanta_augusta")
     client = FakeWikiClient(
-        resolutions={"Aenetus virescens": ResolvedTitle("Aenetus virescens", "Pūriri moth", False)},
-        pages={"Pūriri moth": wikitext("puriri_moth")},
+        resolutions={
+            "Powelliphanta augusta": ResolvedTitle(
+                "Powelliphanta augusta", "Powelliphanta augusta", False
+            )
+        },
+        pages={"Powelliphanta augusta": page},
     )
-    run(rows, client)
-    # FakeWikiClient records only resolve/fetch; assert no other interaction.
-    assert hasattr(client, "resolve_calls") and hasattr(client, "fetch_calls")
-    assert client.fetch_calls == ["Pūriri moth"]
+    first = run(rows, client)
+    assert len(first.matched) == 1  # NC already, but the ref is replaced
+
+    client.pages["Powelliphanta augusta"] = first.matched[0].after
+    second = run(rows, client)
+    assert second.matched == []
+    assert [a["reason"] for a in second.ambiguous] == ["already-current"]

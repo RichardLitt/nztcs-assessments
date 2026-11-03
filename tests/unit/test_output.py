@@ -34,6 +34,7 @@ def test_matched_md_has_anchor(tmp_path):
     md = (tmp_path / "matched.md").read_text(encoding="utf-8")
     assert 'id="speciesId-12345"' in md
     assert "```diff" in md
+    assert "- **Common name:** pūriri moth\n" in md
 
 
 def test_stats_balanced(tmp_path):

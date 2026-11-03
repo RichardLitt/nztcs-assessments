@@ -22,6 +22,7 @@ dev = [
     "pytest-cov>=4.0",
     "responses>=0.23",
     "ruff>=0.4",
+    "pyright>=1.1.380",
 ]
 
 [project.scripts]
@@ -31,11 +32,20 @@ nztcs-wiki-bot = "nztcs_wiki_bot.cli:main"
 where = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "src/nztcs_wiki_bot"]
 markers = [
     "live: tests that hit the real Wikipedia API (deselected by default)",
 ]
-addopts = "-m 'not live'"
+addopts = "-m 'not live' --doctest-modules --cov=nztcs_wiki_bot --cov-report=term-missing --cov-fail-under=90"
+
+[tool.coverage.run]
+omit = ["*/__main__.py"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.10"
+venvPath = "."
+venv = ".venv"
 
 [tool.ruff]
 line-length = 100

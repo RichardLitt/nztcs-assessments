@@ -19,28 +19,32 @@ def test_find_taxobox_legacy():
 def test_no_infobox_returns_none():
     assert sb.find_infobox(wikitext("disambig")) is None
     assert sb.find_infobox("plain article, no template") is None
+    # An article with other templates ({{Reflist}}) but no taxon infobox.
+    assert sb.find_infobox(wikitext("no_infobox")) is None
 
 
 # -- verify_taxon -----------------------------------------------------------
 
+def _infobox(name: str) -> sb.Infobox:
+    ib = sb.find_infobox(wikitext(name))
+    assert ib is not None
+    return ib
+
+
 def test_verify_taxon_genus_species():
-    ib = sb.find_infobox(wikitext("puriri_moth"))
-    assert sb.verify_taxon(ib, "Aenetus", "virescens")
+    assert sb.verify_taxon(_infobox("puriri_moth"), "Aenetus", "virescens")
 
 
 def test_verify_taxon_rejects_wrong_genus():
-    ib = sb.find_infobox(wikitext("wrong_taxon"))
-    assert not sb.verify_taxon(ib, "Aenetus", "virescens")
+    assert not sb.verify_taxon(_infobox("wrong_taxon"), "Aenetus", "virescens")
 
 
 def test_verify_taxon_combined_taxon_param():
-    ib = sb.find_infobox(wikitext("taxon_shorthand"))
-    assert sb.verify_taxon(ib, "Aenetus", "virescens")
+    assert sb.verify_taxon(_infobox("taxon_shorthand"), "Aenetus", "virescens")
 
 
 def test_verify_taxon_case_insensitive():
-    ib = sb.find_infobox(wikitext("puriri_moth"))
-    assert sb.verify_taxon(ib, "aenetus", "VIRESCENS")
+    assert sb.verify_taxon(_infobox("puriri_moth"), "aenetus", "VIRESCENS")
 
 
 # -- patch_status -----------------------------------------------------------
