@@ -50,7 +50,8 @@ CSV ─▶ clean name ─▶ skip? ─▶ map status ─▶ resolve title ─▶
 
 ```
 src/nztcs_wiki_bot/
-├── cli.py           argparse; builds the client and runs the pipeline
+├── cli.py           argparse; dispatches `fetch` or runs the pipeline
+├── fetch.py         nztcs.org.nz report → CSV (paginated)
 ├── csv_loader.py    CSV → Row; strips HTML from cells
 ├── name_cleaner.py  raw NZTCS name → binomial or skip reason
 ├── status_map.py    status title → Speciesbox code
@@ -61,8 +62,7 @@ src/nztcs_wiki_bot/
 └── output.py        Buckets → review/ files
 ```
 
-`fetch_nztcs_assessments.py` at the repository root downloads a report from
-nztcs.org.nz into the CSV the bot reads.
+`wiki_client` and `fetch` are the only modules that make network requests.
 
 ## Key decisions
 
