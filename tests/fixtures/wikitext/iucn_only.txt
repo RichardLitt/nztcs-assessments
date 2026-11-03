@@ -1,0 +1,9 @@
+{{Speciesbox
+| genus = Aenetus
+| species = virescens
+| authority = (Doubleday, 1843)
+| status = LC
+| status_system = IUCN3.1
+| status_ref = <ref name="iucn">{{cite iucn |title=x}}</ref>
+}}
+A test article that already carries an IUCN status.

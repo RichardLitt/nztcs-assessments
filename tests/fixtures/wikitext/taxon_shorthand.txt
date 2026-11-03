@@ -1,0 +1,5 @@
+{{Speciesbox
+| taxon = Aenetus virescens
+| authority = (Doubleday, 1843)
+}}
+A Speciesbox using the combined ''taxon'' shorthand instead of genus+species.
