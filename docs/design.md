@@ -103,8 +103,7 @@ elsewhere, the short `<ref name="…" />` form is used.
 `status_map.STATUS_CODES` maps each NZTCS `conservationStatusTitle` to the code
 Speciesbox expects (e.g. Nationally Critical → `NC`, as on
 [Powelliphanta augusta](https://en.wikipedia.org/wiki/Powelliphanta_augusta)).
-"Uncommon", the 2025 manual's new name for "Naturally Uncommon", also maps to
-`NU`. The table is limited to the codes Wikipedia's
+The table is limited to the codes Wikipedia's
 [Module:Conservation status](https://en.wikipedia.org/wiki/Module:Conservation_status)
 displays for NZTCS; anything else renders as "Invalid status".
 
@@ -113,11 +112,21 @@ Everything without a code goes to `unmapped`, with a reason:
 - `non-status`: titles that aren't conservation statuses ("Not assessed",
   "Taxonomically indistinct").
 - `no-wikipedia-code`: real NZTCS categories the module doesn't render yet
-  (Coloniser, Migrant, Vagrant, Introduced and Naturalised). Their codes are
+  (Coloniser, Migrant, Vagrant, Introduced and Naturalised, and Uncommon when
+  the population isn't natural). Their codes are
   kept in `PENDING_WIKIPEDIA_CODES`, and adding them to the module is proposed
   in [proposals/module-conservation-status-nztcs.md](proposals/module-conservation-status-nztcs.md).
 - `unknown-status-title`: a title the table has never seen, so a new NZTCS
   category shows up in the output instead of becoming a wrong edit.
+
+"Uncommon" depends on the row's criteria code. The 2022 NZTCS manual replaced
+"Naturally Uncommon" with "Uncommon", which also covers populations that are
+small because of human impact, and records the population state in the criteria
+code (`UNCn` natural, `UNCu` unnatural, `UNCx` unknown). Wikipedia's `NU`
+renders "Naturally Uncommon", so `status_map.code_for()` emits it only for
+`UNCn`. Every other Uncommon row goes to `unmapped` as `no-wikipedia-code`
+until the module has an "Uncommon" code. The manual treats an unknown state as
+unnatural, and a blank criteria code is handled the same way.
 
 ### Skip names that can't match
 

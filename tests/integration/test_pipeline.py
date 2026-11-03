@@ -6,13 +6,14 @@ from nztcs_wiki_bot.wiki_client import ResolvedTitle
 from tests.conftest import FakeWikiClient, wikitext
 
 
-def _row(species_id, name, status="Not Threatened", common=""):
+def _row(species_id, name, status="Not Threatened", common="", criteria=""):
     return Row.from_dict(
         {
             "speciesId": species_id,
             "nztcsSpeciesName": name,
             "commonName": common,
             "conservationStatusTitle": status,
+            "criteriaTitle": criteria,
             "reportName": "Lepidoptera 2025 (Hoare et al. 2026)",
             "reportYear": "2026",
         }
@@ -65,6 +66,26 @@ def test_full_pipeline_buckets():
         + len(buckets.skipped)
     )
     assert total == buckets.rows_in
+
+
+def test_uncommon_uses_population_state_from_criteria():
+    rows = [
+        _row("1", "Aenetus virescens (Doubleday, 1843)", "Uncommon", criteria="UNCn2j"),
+        _row("2", "Agrotis admirationis Guenée, 1868", "Uncommon", criteria="UNCu2l"),
+    ]
+    client = FakeWikiClient(
+        resolutions={"Aenetus virescens": ResolvedTitle("Aenetus virescens", "Pūriri moth", False)},
+        pages={"Pūriri moth": wikitext("puriri_moth")},
+    )
+    buckets = run(rows, client)
+    assert [(e.species_id, e.status_code) for e in buckets.matched] == [("1", "NU")]
+    assert buckets.unmapped == [
+        {
+            "binomial": "Agrotis admirationis",
+            "status_title": "Uncommon",
+            "reason": "no-wikipedia-code",
+        }
+    ]
 
 
 def test_pipeline_is_idempotent_on_buckets():
