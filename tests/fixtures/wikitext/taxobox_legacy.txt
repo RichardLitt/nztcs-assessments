@@ -1,0 +1,8 @@
+{{Taxobox
+| name = Example legacy taxon
+| genus = Aoraia
+| species = oreobolae
+| binomial = Aoraia oreobolae
+| binomial_authority = Dugdale, 1994
+}}
+A test article using the legacy {{tl|Taxobox}} template.

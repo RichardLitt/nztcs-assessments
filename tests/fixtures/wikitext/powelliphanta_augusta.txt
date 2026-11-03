@@ -1,0 +1,12 @@
+{{Speciesbox
+| genus = Powelliphanta
+| species = augusta
+| authority = Walker, 2003
+| status = NC
+| status_system = NZTCS
+| status_ref = <ref name="oldref">{{cite report |title=old}}</ref>
+}}
+'''''Powelliphanta augusta''''' is a species of large land snail.
+
+== References ==
+{{Reflist}}

@@ -1,0 +1,7 @@
+{{Speciesbox
+| genus = Vanessa
+| species = itea
+| authority = (Fabricius, 1775)
+}}
+A Speciesbox for a different genus entirely; verify_taxon must reject it for
+''Aenetus virescens''.

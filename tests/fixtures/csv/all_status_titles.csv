@@ -1,0 +1,13 @@
+speciesId,assessmentId,nztcsSpeciesName,commonName,conservationStatusTitle,categoryTitle,criteriaTitle,qualifiers,reportName,reportYear,popSizeTitle,popTrendTitle
+1000008,185354,"Danaus petilia (Stoll, 1790)",lesser wanderer butterfly,Coloniser,Non-resident Native,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+30460,185169,"""Gymnobathra"" rufopunctella Hudson, 1950",moth,Data Deficient,Data Deficient,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+1000135,185468,"Agrotis admirationis Guenée, 1868",owlet moth,Declining,At Risk,DECu3k,"CI, DPS, DPT, PD, PF",Lepidoptera 2025 (Hoare et al. 2026),2026,AREA=1000-10000ha,DEC 10-30%
+30693,185193,"Ephestia kuehniella Zeller, 1879",snout moth,Introduced and Naturalised,Introduced and Naturalised,,SO,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+35538,185220,"Arctesthes avatar Patrick, Patrick & Hoare, 2019",Avatar moth,Nationally Critical,Threatened,NCu6g,"CR, OL",Lepidoptera 2025 (Hoare et al. 2026),2026,AREA<=1ha,DEC >70%
+12020,185048,"Cephalissa siria Meyrick, 1883",looper moth,Nationally Endangered,Threatened,NEu3h,"CI, CR, DPS, DPT, PF, RR",Lepidoptera 2025 (Hoare et al. 2026),2026,AREA=1-10ha,DEC 10-30%
+11906,185032,"""Acroclita"" discariana Philpott, 1930",leafroller moth,Nationally Vulnerable,Threatened,NVu3p,RR,Lepidoptera 2025 (Hoare et al. 2026),2026,"SUBPOP 6-15, MATIND <=500",DEC 10-30%
+1000000,185346,"Aenetus virescens (Doubleday, 1843)",pūriri moth,Not Threatened,Not Threatened,,,Lepidoptera 2025 (Hoare et al. 2026),2026,AREA>100000ha,STABLE +/-10%
+12013,185047,"Cateristis eustyla Meyrick, 1889",moth,Not assessed,Not assessed,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+12567,185100,Notoreas perornata A (NZAC04226312; Cape Campbell),pimelea looper moth,Taxonomically indistinct,Taxonomically indistinct,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
+31615,185197,"""Schiffermuelleria"" orthophanes (Meyrick, 1905)",moth,Uncommon,At Risk,UNCu2l,"DPS, DPT, EF",Lepidoptera 2025 (Hoare et al. 2026),2026,AREA=10000-100000ha,STABLE +/-10%
+1000146,185479,"Delias nigrina (Fabricius, 1775)",black jezebel,Vagrant,Non-resident Native,,,Lepidoptera 2025 (Hoare et al. 2026),2026,,
