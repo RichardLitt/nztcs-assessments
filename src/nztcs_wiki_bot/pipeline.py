@@ -66,11 +66,7 @@ def run(rows: list[Row], client: WikiReader, config: PipelineConfig | None = Non
                 {
                     "binomial": binomial,
                     "status_title": title_status,
-                    "reason": (
-                        "non-status"
-                        if title_status in status_map.NON_STATUS_TITLES
-                        else "unknown-status-title"
-                    ),
+                    "reason": status_map.unmapped_reason(title_status),
                 }
             )
             continue

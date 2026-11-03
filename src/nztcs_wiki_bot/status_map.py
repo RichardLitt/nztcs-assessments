@@ -1,8 +1,9 @@
 """Map NZTCS ``conservationStatusTitle`` values to Speciesbox ``|status=`` codes.
 
-The mapping is verified against
-https://en.wikipedia.org/wiki/Wikipedia:Conservation_status and real articles
-(e.g. *Powelliphanta augusta* uses ``status = NC``, ``status_system = NZTCS``).
+Only codes that Wikipedia can actually render are mapped. The source of truth is
+the ``p.NZTCS`` function in
+https://en.wikipedia.org/wiki/Module:Conservation_status, which shows
+"Invalid status" (and adds a maintenance category) for anything else.
 
 Design rule: the bot must **fail loudly** on an unknown status title rather than
 silently skip it, so a new NZTCS category can never slip through as a missing
@@ -27,10 +28,6 @@ STATUS_CODES: dict[str, str] = {
     "Not Threatened": "NT",
     "Data Deficient": "DD",
     "Extinct": "EX",
-    "Migrant": "M",
-    "Vagrant": "V",
-    "Coloniser": "C",
-    "Introduced and Naturalised": "IN",
 }
 
 # Titles that appear in NZTCS data but are deliberately NOT conservation codes:
@@ -43,6 +40,36 @@ NON_STATUS_TITLES: frozenset[str] = frozenset(
         "Taxonomically indistinct",
     }
 )
+
+
+# Real NZTCS categories (mostly non-resident or introduced species) that
+# Wikipedia's Module:Conservation status has no badge for. Patching these would
+# render "Invalid status", so they are routed to ``unmapped`` instead.
+NO_WIKIPEDIA_CODE_TITLES: frozenset[str] = frozenset(
+    {
+        "Migrant",
+        "Vagrant",
+        "Coloniser",
+        "Introduced and Naturalised",
+    }
+)
+
+
+def unmapped_reason(title: str) -> str:
+    """Why a title has no code: ``non-status``, ``no-wikipedia-code`` or
+    ``unknown-status-title`` (a title this table has never seen).
+
+    >>> unmapped_reason("Vagrant")
+    'no-wikipedia-code'
+    >>> unmapped_reason("Something New")
+    'unknown-status-title'
+    """
+    key = (title or "").strip()
+    if key in NON_STATUS_TITLES:
+        return "non-status"
+    if key in NO_WIKIPEDIA_CODE_TITLES:
+        return "no-wikipedia-code"
+    return "unknown-status-title"
 
 
 class UnknownStatusError(ValueError):
