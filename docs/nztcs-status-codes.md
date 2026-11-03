@@ -61,16 +61,19 @@ case applies.
 
 | Title | Reason | Why |
 |---|---|---|
-| Migrant | `no-wikipedia-code` | Real NZTCS category with no badge in the module. |
-| Vagrant | `no-wikipedia-code` | Same. |
-| Coloniser | `no-wikipedia-code` | Same. |
-| Introduced and Naturalised | `no-wikipedia-code` | Same. |
+| Coloniser | `no-wikipedia-code` | Real NZTCS category the module doesn't render yet. Proposed code `CO`. |
+| Migrant | `no-wikipedia-code` | Same. Proposed code `MI`. |
+| Vagrant | `no-wikipedia-code` | Same. Proposed code `VA`. |
+| Introduced and Naturalised | `no-wikipedia-code` | Same. Proposed code `IN`. |
 | Not assessed | `non-status` | The species has no assessment. |
 | Taxonomically indistinct | `non-status` | Not a distinct taxon for assessment purposes. |
 | *anything else* | `unknown-status-title` | A title this table has never seen. See below. |
 
-If Wikipedia later adds badges for the `no-wikipedia-code` titles, move them
-into `STATUS_CODES` with the module's code.
+Adding the `no-wikipedia-code` categories to the module is proposed in
+[proposals/module-conservation-status-nztcs.md](proposals/module-conservation-status-nztcs.md).
+Their codes are kept in `status_map.PENDING_WIKIPEDIA_CODES`. Once the module
+accepts them, move those entries into `STATUS_CODES`, using the codes the
+module adopted.
 
 ## Why unknown titles fail loudly
 

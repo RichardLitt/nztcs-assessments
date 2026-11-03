@@ -42,17 +42,17 @@ NON_STATUS_TITLES: frozenset[str] = frozenset(
 )
 
 
-# Real NZTCS categories (mostly non-resident or introduced species) that
-# Wikipedia's Module:Conservation status has no badge for. Patching these would
-# render "Invalid status", so they are routed to ``unmapped`` instead.
-NO_WIKIPEDIA_CODE_TITLES: frozenset[str] = frozenset(
-    {
-        "Migrant",
-        "Vagrant",
-        "Coloniser",
-        "Introduced and Naturalised",
-    }
-)
+# Real NZTCS categories (non-resident or introduced species) that Wikipedia's
+# Module:Conservation status doesn't render yet. Patching these would show
+# "Invalid status", so they are routed to ``unmapped`` instead. The codes are the
+# ones proposed in docs/proposals/module-conservation-status-nztcs.md; once the
+# module accepts them, move these entries into STATUS_CODES.
+PENDING_WIKIPEDIA_CODES: dict[str, str] = {
+    "Coloniser": "CO",
+    "Migrant": "MI",
+    "Vagrant": "VA",
+    "Introduced and Naturalised": "IN",
+}
 
 
 def unmapped_reason(title: str) -> str:
@@ -67,7 +67,7 @@ def unmapped_reason(title: str) -> str:
     key = (title or "").strip()
     if key in NON_STATUS_TITLES:
         return "non-status"
-    if key in NO_WIKIPEDIA_CODE_TITLES:
+    if key in PENDING_WIKIPEDIA_CODES:
         return "no-wikipedia-code"
     return "unknown-status-title"
 
