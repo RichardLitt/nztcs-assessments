@@ -112,8 +112,10 @@ Everything without a code goes to `unmapped`, with a reason:
 
 - `non-status`: titles that aren't conservation statuses ("Not assessed",
   "Taxonomically indistinct").
-- `no-wikipedia-code`: real NZTCS categories Wikipedia has no badge for
-  (Migrant, Vagrant, Coloniser, Introduced and Naturalised).
+- `no-wikipedia-code`: real NZTCS categories the module doesn't render yet
+  (Coloniser, Migrant, Vagrant, Introduced and Naturalised). Their codes are
+  kept in `PENDING_WIKIPEDIA_CODES`, and adding them to the module is proposed
+  in [proposals/module-conservation-status-nztcs.md](proposals/module-conservation-status-nztcs.md).
 - `unknown-status-title`: a title the table has never seen, so a new NZTCS
   category shows up in the output instead of becoming a wrong edit.
 
