@@ -23,7 +23,8 @@ pytest             # offline tests + doctests, fails under 90% coverage
 ```
 
 The suite is fully offline. Wikipedia and NZTCS are mocked. One opt-in test
-does a real read-only Wikipedia lookup:
+does a real read-only Wikipedia lookup. Run it before processing a new NZTCS
+report, to catch Wikipedia API changes the mocks can't:
 
 ```bash
 NZTCS_BOT_CONTACT=you@example.org pytest -m live --no-cov tests/live
