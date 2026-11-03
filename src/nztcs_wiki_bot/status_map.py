@@ -23,8 +23,6 @@ STATUS_CODES: dict[str, str] = {
     "Recovering": "R",
     "Relict": "Rel",
     "Naturally Uncommon": "NU",
-    # 2025 manual renamed "Naturally Uncommon" -> "Uncommon"; same category.
-    "Uncommon": "NU",
     "Not Threatened": "NT",
     "Data Deficient": "DD",
     "Extinct": "EX",
@@ -42,16 +40,20 @@ NON_STATUS_TITLES: frozenset[str] = frozenset(
 )
 
 
-# Real NZTCS categories (non-resident or introduced species) that Wikipedia's
-# Module:Conservation status doesn't render yet. Patching these would show
-# "Invalid status", so they are routed to ``unmapped`` instead. The codes are the
-# ones proposed in docs/proposals/module-conservation-status-nztcs.md; once the
-# module accepts them, move these entries into STATUS_CODES.
+# Real NZTCS statuses that Wikipedia's Module:Conservation status doesn't render
+# yet. Patching these would show "Invalid status", so they are routed to
+# ``unmapped`` instead. The codes are the ones proposed in
+# docs/proposals/module-conservation-status-nztcs.md; once the module accepts
+# them, move these entries into STATUS_CODES.
 PENDING_WIKIPEDIA_CODES: dict[str, str] = {
     "Coloniser": "CO",
     "Migrant": "MI",
     "Vagrant": "VA",
     "Introduced and Naturalised": "IN",
+    # The 2022 manual widened "Naturally Uncommon" into "Uncommon", which also
+    # covers populations that are small because of human impact. Only the
+    # natural ones can be shown as Wikipedia's NU; see code_for().
+    "Uncommon": "U",
 }
 
 
@@ -85,7 +87,7 @@ def status_code(title: str) -> str:
 
     >>> status_code("Nationally Critical")
     'NC'
-    >>> status_code("Uncommon")
+    >>> status_code("Naturally Uncommon")
     'NU'
 
     Raises :class:`UnknownStatusError` on an unmapped title.
@@ -95,6 +97,28 @@ def status_code(title: str) -> str:
         return STATUS_CODES[key]
     except KeyError:
         raise UnknownStatusError(title) from None
+
+
+def code_for(title: str, criteria: str = "") -> str | None:
+    """Return the Speciesbox code for a row, or ``None`` if there isn't one.
+
+    Like :func:`status_code`, but also uses the row's criteria code. An
+    "Uncommon" taxon renders as ``NU`` ("Naturally Uncommon") only when its
+    criteria code records a natural population state (``UNCn…``). The manual
+    treats an unknown state as unnatural, so ``UNCx…`` and a blank criteria
+    code don't qualify.
+
+    >>> code_for("Declining", "DECu3k")
+    'D'
+    >>> code_for("Uncommon", "UNCn2j")
+    'NU'
+    >>> code_for("Uncommon", "UNCu2l") is None
+    True
+    """
+    key = (title or "").strip()
+    if key == "Uncommon":
+        return "NU" if (criteria or "").strip().startswith("UNCn") else None
+    return STATUS_CODES.get(key)
 
 
 def is_known(title: str) -> bool:

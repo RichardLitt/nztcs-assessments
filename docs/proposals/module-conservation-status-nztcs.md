@@ -1,4 +1,4 @@
-# Proposal: render the remaining NZTCS categories on Wikipedia
+# Proposal: render the remaining NZTCS statuses on Wikipedia
 
 **Status:** draft, not yet posted.
 **Where it goes:** [Module talk:Conservation status](https://en.wikipedia.org/wiki/Module_talk:Conservation_status)
@@ -15,7 +15,7 @@ As of 2026-11-04 it accepts `EX`, `NC`, `NE`, `NV`, `NI`, `D`, `Rel`, `NU`,
 [Category:Invalid conservation status](https://en.wikipedia.org/wiki/Category:Invalid_conservation_status).
 
 NZTCS also has four categories that every DOC report assigns but that aren't
-threat assessments. The current manual (Rolfe et al. 2022, §5, pp. 31–32)
+threat assessments. The current manual (Rolfe et al. 2022, §5, pp. 32–33)
 defines them as:
 
 | NZTCS category | Group | Definition (Rolfe et al. 2022) |
@@ -26,7 +26,7 @@ defines them as:
 | Introduced and Naturalised | — | "Taxa that have become naturalised in New Zealand after being deliberately or accidentally introduced by human agency" (a self-sustaining wild population over at least three generations, spread beyond the initial site) |
 
 The manual is explicit that taxa in these categories are *listed* by category
-but "their conservation statuses are not assessed under the NZTCS" (§2, p. 14).
+but "their conservation statuses are not assessed under the NZTCS" (§3, p. 15).
 So the category is the NZTCS status of record for these taxa, but it isn't a
 position on the threat scale.
 
@@ -37,10 +37,21 @@ lists them under "Other categories". In the 2025 Lepidoptera report alone, 13
 of 507 taxa are in them (6 Vagrant, 5 Introduced and Naturalised, 2 Coloniser).
 Without module support, editors can't record those statuses at all.
 
+The 2022 manual also changed one threat status. "At Risk – Naturally Uncommon"
+was renamed "At Risk – Uncommon" and widened: it now covers all stable or
+increasing taxa that meet the At Risk population-size criteria, "regardless of
+whether their state is natural or unnatural", with the population state
+recorded separately (Rolfe et al. 2022, §2.2, p. 10). The state is part of each
+assessment's criteria code: `UNCn…` is natural, `UNCu…` unnatural, and `UNCx…`
+unknown, which the manual treats as unnatural (§3.2.2, p. 17). The module's `NU`
+renders "Naturally Uncommon", which is right for `UNCn` taxa but wrong for the
+rest. In the 2025 Lepidoptera report, 71 of the 84 Uncommon taxa are `UNCu` or
+`UNCx`, and 4 have no criteria code.
+
 ## Proposed change
 
-Add four codes to `p.NZTCS`, rendered as text linked to the NZTCS article, with
-no badge image. These categories aren't threat assessments, so a threat-scale
+**1. The four other categories.** Add four codes to `p.NZTCS`, rendered as
+text linked to the NZTCS article, with no badge image. These categories aren't threat assessments, so a threat-scale
 badge would misrepresent them; IUCN `NE` and `NA` are text-only for the same
 reason:
 
@@ -51,8 +62,17 @@ reason:
 | `VA` / `va` | Vagrant |
 | `IN` / `in` | Introduced and Naturalised |
 
-NZTCS doesn't define short codes for these, so the codes are new. None collides
-with an existing NZTCS code or alias.
+**2. Uncommon.** Add `U` / `u`, rendered as "Uncommon", for taxa whose
+population state isn't natural. `NU` stays as it is for Naturally Uncommon.
+There's no Uncommon badge on Commons, and the NU image is labelled "NU", so `U`
+is text-only for now; a badge can be added later without changing the code.
+
+| Code | Renders as |
+|---|---|
+| `U` / `u` | Uncommon |
+
+NZTCS doesn't define short codes for any of these, so the codes are new. None
+collides with an existing NZTCS code or alias.
 
 Diff against the live module (insert after the `DD` branch, before the 2002
 categories):
@@ -71,6 +91,10 @@ categories):
 +    	output = "[[New Zealand Threat Classification System#Other categories|Vagrant]]"
 +   elseif status == "IN" or status == "in" then
 +    	output = "[[New Zealand Threat Classification System#Other categories|Introduced and Naturalised]]"
++   -- At Risk – Uncommon (2022) where the population state isn't natural.
++   -- No badge exists yet.
++   elseif status == "U" or status == "u" then
++    	output = "Uncommon"
     
     --  Older categories (version 2002): SD,GD,SP,RR
 ```
@@ -92,11 +116,14 @@ maintenance category:
 | `{{Taxobox/species\|NZTCS\|MI}}` | Migrant |
 | `{{Taxobox/species\|NZTCS\|VA}}` | Vagrant |
 | `{{Taxobox/species\|NZTCS\|IN}}` | Introduced and Naturalised |
+| `{{Taxobox/species\|NZTCS\|U}}` | Uncommon |
+| `{{Taxobox/species\|NZTCS\|NU}}` | Naturally Uncommon (unchanged) |
 | `{{Taxobox/species\|NZTCS\|NT}}` | Not Threatened (unchanged) |
 
 Real examples from the 2025 Lepidoptera report: *Danaus petilia* (Coloniser),
 *Hypolimnas bolina* (Vagrant; the manual itself uses *H. bolina nerina* as a
-Vagrant example), *Pieris rapae* (Introduced and Naturalised).
+Vagrant example), *Pieris rapae* (Introduced and Naturalised),
+*"Schiffermuelleria" orthophanes* (Uncommon, `UNCu2l`).
 
 ## References
 
@@ -114,12 +141,14 @@ Vagrant example), *Pieris rapae* (Introduced and Naturalised).
 Paste this as a new section on Module talk:Conservation status:
 
 ```wikitext
-== Add remaining NZTCS categories (Coloniser, Migrant, Vagrant, Introduced and Naturalised) ==
+== Add remaining NZTCS statuses (Coloniser, Migrant, Vagrant, Introduced and Naturalised, Uncommon) ==
 
 {{Edit template-protected|Module:Conservation status|answered=no}}
 <code>p.NZTCS</code> currently has no codes for four categories that the [[New Zealand Threat Classification System]] assigns in every DOC report: '''Coloniser''', '''Migrant''' and '''Vagrant''' (the "Non-resident Native" group) and '''Introduced and Naturalised'''. They are defined in the current NZTCS manual (Rolfe et al. 2022, §5) and described at [[New Zealand Threat Classification System#Other categories]]. The manual lists taxa in these categories without assessing their threat status, so for those taxa the category is the NZTCS status of record. In the 2025 Lepidoptera assessment alone, 13 of 507 taxa fall into them, and at the moment there is no way to record that status in a Speciesbox without getting ''Invalid status''.
 
-Please add these four branches to <code>p.NZTCS</code>, after the <code>DD</code> branch and before the 2002 categories. They are text-only (no badge), since they are not threat assessments, much like IUCN <code>NE</code> and <code>NA</code>:
+The 2022 manual also renamed '''At Risk – Naturally Uncommon''' to '''At Risk – Uncommon''' and widened it to cover small stable populations "regardless of whether their state is natural or unnatural" (Rolfe et al. 2022, §2.2, p. 10); the state is recorded in the criteria code (<code>UNCn</code> natural, <code>UNCu</code> unnatural, <code>UNCx</code> unknown). <code>NU</code> renders "Naturally Uncommon", which is wrong for most Uncommon taxa: 71 of 84 in the 2025 Lepidoptera report are not natural. So I'd also like to add <code>U</code> for "Uncommon", keeping <code>NU</code> for taxa whose state is natural. There is no Uncommon badge on Commons yet, so it is text-only for now.
+
+Please add these branches to <code>p.NZTCS</code>, after the <code>DD</code> branch and before the 2002 categories. The first four are text-only (no badge) since they are not threat assessments, much like IUCN <code>NE</code> and <code>NA</code>:
 
 <syntaxhighlight lang="lua">
    -- Non-resident Native (CO, MI, VA) and Introduced and Naturalised (IN).
@@ -132,15 +161,20 @@ Please add these four branches to <code>p.NZTCS</code>, after the <code>DD</code
     	output = "[[New Zealand Threat Classification System#Other categories|Vagrant]]"
    elseif status == "IN" or status == "in" then
     	output = "[[New Zealand Threat Classification System#Other categories|Introduced and Naturalised]]"
+   -- At Risk – Uncommon (2022) where the population state isn't natural.
+   -- No badge exists yet.
+   elseif status == "U" or status == "u" then
+    	output = "Uncommon"
 </syntaxhighlight>
 
-NZTCS has no official short codes for these, so <code>CO</code>, <code>MI</code>, <code>VA</code> and <code>IN</code> are new; none collides with an existing NZTCS code. Note that the sandbox is currently behind the live module (it lacks TSPA), so it would need syncing first. I'm happy to update [[Wikipedia:Conservation status]] and the Speciesbox documentation once this is in. ~~~~
+NZTCS has no official short codes for these, so <code>CO</code>, <code>MI</code>, <code>VA</code>, <code>IN</code> and <code>U</code> are new; none collides with an existing NZTCS code. Note that the sandbox is currently behind the live module (it lacks TSPA), so it would need syncing first. I'm happy to update [[Wikipedia:Conservation status]] and the Speciesbox documentation once this is in. ~~~~
 ```
 
 ## After it's accepted
 
-1. Move the four entries from `PENDING_WIKIPEDIA_CODES` to `STATUS_CODES` in
+1. Move the entries from `PENDING_WIKIPEDIA_CODES` to `STATUS_CODES` in
    `src/nztcs_wiki_bot/status_map.py`, using whatever codes were finally
-   adopted.
+   adopted. For Uncommon, change `status_map.code_for()` to return the new code
+   instead of `None` when the state isn't natural.
 2. Add them to `WIKIPEDIA_NZTCS_CODES` in `tests/unit/test_status_map.py`.
 3. Update `docs/nztcs-status-codes.md` and this file's status line.

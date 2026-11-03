@@ -16,21 +16,23 @@ Its `p.NZTCS` function is the source of truth for which codes display. Anything
 else renders as ***Invalid status*** and puts the article in
 [Category:Invalid conservation status](https://en.wikipedia.org/wiki/Category:Invalid_conservation_status).
 
-As of 2026-11-03 the module accepts:
+As of 2026-11-04 the module accepts the codes below. The last column says which
+NZTCS manual the status belongs to: Molloy et al. 2002, Townsend et al. 2008, or
+Rolfe et al. 2022, which DOC reports have used since July 2024.
 
-| Code | Renders as | NZTCS era |
+| Code | Renders as | NZTCS manual |
 |---|---|---|
-| `EX` | Extinct | current |
-| `NC` | Nationally Critical | 2019 + |
-| `NE` | Nationally Endangered | 2019 + |
-| `NV` | Nationally Vulnerable | 2019 + |
-| `NI` | Nationally Increasing | 2019 + |
-| `D` | Declining | 2019 + |
-| `Rel` | Relict | 2019 + |
-| `NU` | Naturally Uncommon | 2019 + |
-| `R` | Recovering | 2008 (folded into NI in 2019) |
-| `NT` | Not Threatened | current |
-| `DD` | Data Deficit *(sic)* | current |
+| `EX` | Extinct | 2008, 2022 |
+| `NC` | Nationally Critical | 2008, 2022 |
+| `NE` | Nationally Endangered | 2008, 2022 |
+| `NV` | Nationally Vulnerable | 2008, 2022 |
+| `NI` | Nationally Increasing | 2022 (was At Risk – Recovering A in 2008) |
+| `D` | Declining | 2008, 2022 |
+| `R` | Recovering | 2008 (Recovering B), 2022 |
+| `Rel` | Relict | 2008 only; a qualifier since 2022 |
+| `NU` | Naturally Uncommon | 2008 only; widened to Uncommon in 2022 |
+| `NT` | Not Threatened | 2008, 2022 |
+| `DD` | Data Deficit *(sic)* | 2008, 2022 |
 | `SD`, `GD`, `SP`, `RR` | Serious Decline, Gradual Decline, Sparse, Range Restricted | 2002, not produced by this tool |
 
 A unit test (`test_every_mapped_code_renders_on_wikipedia`) pins the tool's
@@ -47,9 +49,9 @@ page together.
 | Nationally Increasing | `NI` | Module |
 | Declining | `D` | Module |
 | Recovering | `R` | Module (2008 category, still renders) |
-| Relict | `Rel` | Module (also accepts `REL`, `rel`) |
+| Relict | `Rel` | Module (also accepts `REL`, `rel`). Only in reports assessed under the 2008 manual. |
 | Naturally Uncommon | `NU` | Module |
-| Uncommon | `NU` | **Judgement call.** Later NZTCS reports use "Uncommon" for the category Wikipedia calls Naturally Uncommon. |
+| Uncommon, criteria `UNCn…` | `NU` | 2022 manual (§2.2): Uncommon with a natural population state is what the 2008 manual called Naturally Uncommon. |
 | Not Threatened | `NT` | Module |
 | Data Deficient | `DD` | Module |
 | Extinct | `EX` | Module |
@@ -65,6 +67,7 @@ case applies.
 | Migrant | `no-wikipedia-code` | Same. Proposed code `MI`. |
 | Vagrant | `no-wikipedia-code` | Same. Proposed code `VA`. |
 | Introduced and Naturalised | `no-wikipedia-code` | Same. Proposed code `IN`. |
+| Uncommon, criteria `UNCu…`, `UNCx…` or blank | `no-wikipedia-code` | The population isn't natural (or is unknown, which the manual treats as unnatural), so "Naturally Uncommon" would be wrong. Proposed code `U`. |
 | Not assessed | `non-status` | The species has no assessment. |
 | Taxonomically indistinct | `non-status` | Not a distinct taxon for assessment purposes. |
 | *anything else* | `unknown-status-title` | A title this table has never seen. See below. |

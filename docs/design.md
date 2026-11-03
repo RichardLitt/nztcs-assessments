@@ -112,6 +112,15 @@ until the module supports them (see the
 table has never seen go to `unmapped` as `unknown-status-title`. Nothing is
 guessed. See [nztcs-status-codes.md](nztcs-status-codes.md).
 
+"Uncommon" depends on the row's criteria code. The 2022 NZTCS manual replaced
+"Naturally Uncommon" with "Uncommon", which also covers populations that are
+small because of human impact, and records the population state in the criteria
+code (`UNCn` natural, `UNCu` unnatural, `UNCx` unknown). Wikipedia's `NU`
+renders "Naturally Uncommon", so `status_map.code_for()` emits it only for
+`UNCn`. Other Uncommon rows go to `unmapped` as `no-wikipedia-code` until the
+module has an "Uncommon" code. The manual treats an unknown state as unnatural,
+and a blank criteria code is handled the same way.
+
 ### Skip names that can't match
 
 Undescribed species (`Archyala sp. A (NZAC…)`) have no article. Scare-quoted
