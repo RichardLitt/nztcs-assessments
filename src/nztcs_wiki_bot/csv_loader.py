@@ -1,7 +1,7 @@
 """Load and clean NZTCS assessment rows from the report CSV.
 
-The CSV is produced by ``fetch_nztcs_assessments.py`` (the fetch script).
-Column names here must stay in sync with the ``fields`` list in that script.
+The CSV is produced by :mod:`nztcs_wiki_bot.fetch`, which writes exactly
+:data:`EXPECTED_FIELDS`.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
 
-# The columns the fetch script writes, in order. Kept here so the loader can
+# The columns the fetch module writes, in order. Kept here so the loader can
 # assert the CSV it is handed is actually an NZTCS report.
 EXPECTED_FIELDS = (
     "speciesId",

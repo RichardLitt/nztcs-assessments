@@ -1,4 +1,8 @@
-"""Command-line entrypoint: ``nztcs-wiki-bot`` / ``python -m nztcs_wiki_bot``."""
+"""Command-line entrypoint: ``nztcs-wiki-bot`` / ``python -m nztcs_wiki_bot``.
+
+``nztcs-wiki-bot fetch ...`` downloads a report (see :mod:`.fetch`); any other
+invocation runs the review-queue pipeline.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +19,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="nztcs-wiki-bot",
         description="Generate a Wikipedia review queue of NZTCS status patches. "
-        "Read-only: never edits Wikipedia.",
+        "Read-only: never edits Wikipedia. "
+        "Use 'nztcs-wiki-bot fetch REPORT_ID' to download a report CSV first.",
     )
     p.add_argument("--csv", required=True, help="Path to an NZTCS report CSV")
     p.add_argument("--out", default="review", help="Output directory (default: review/)")
@@ -36,6 +41,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "fetch":
+        from . import fetch
+
+        return fetch.main(argv[1:])
+
     args = build_parser().parse_args(argv)
 
     if not Path(args.csv).exists():

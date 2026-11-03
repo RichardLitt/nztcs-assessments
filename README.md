@@ -141,14 +141,18 @@ An email address or a reachable URL (e.g. your Wikipedia user page) both work.
 
 ## Quickstart
 
-A sample NZTCS report (507 Lepidoptera — moths and butterflies — from the 2026
-report) is bundled as `nztcs_report_1176_20260505.csv`.
+First download a report. Report `1176` is the 2026 Lepidoptera report (507
+moths and butterflies):
+
+```bash
+nztcs-wiki-bot fetch 1176 --out lepidoptera.csv
+```
 
 **Start small.** Process just a handful of species first so you can see how it
 behaves before running the whole file:
 
 ```bash
-nztcs-wiki-bot --csv nztcs_report_1176_20260505.csv --limit 5
+nztcs-wiki-bot --csv lepidoptera.csv --limit 5
 ```
 
 This makes a few read-only requests to Wikipedia and writes a `review/` folder.
@@ -157,7 +161,7 @@ Open `review/matched.md` to see the proposed edits.
 When you're comfortable, run the whole file:
 
 ```bash
-nztcs-wiki-bot --csv nztcs_report_1176_20260505.csv
+nztcs-wiki-bot --csv lepidoptera.csv
 ```
 
 The first full run will take a few minutes (it's deliberately rate-limited to be
@@ -241,16 +245,15 @@ nztcs-wiki-bot --csv PATH [--contact TEXT] [--out DIR] [--cache DIR] [--limit N]
 
 ## Getting a different NZTCS report
 
-The bundled CSV is one report (Lepidoptera). To fetch another taxon group, use
-the included fetch script with the report's ID from
+To fetch another taxon group, pass that report's ID from
 [nztcs.org.nz](https://nztcs.org.nz):
 
 ```bash
-python3 fetch_nztcs_assessments.py 1176
+nztcs-wiki-bot fetch <report_id>
 ```
 
-This writes a new `nztcs_report_<id>_<date>.csv`, which you then pass to
-`--csv`. (The number is the report ID; `1176` is the bundled Lepidoptera report.)
+Without `--out`, this writes `nztcs_report_<id>_<date>.csv`, which you then pass
+to `--csv`.
 
 > If the new report uses a conservation-status label this tool hasn't seen
 > before, it won't guess — that species goes into `unmapped.tsv` so you can add
@@ -288,17 +291,18 @@ one job:
 
 | File | Responsibility |
 |---|---|
+| `fetch.py` | Download a report from nztcs.org.nz into a CSV. |
 | `csv_loader.py` | Read and clean rows from the NZTCS CSV. |
 | `name_cleaner.py` | Extract the scientific name; decide what to skip. |
 | `status_map.py` | Translate status names to Speciesbox codes. |
-| `wiki_client.py` | **The only file that talks to the network.** Read-only, polite, cached. |
+| `wiki_client.py` | **The only file that talks to Wikipedia.** Read-only, polite, cached. |
 | `speciesbox.py` | Parse, verify, and patch the Wikipedia infobox template. |
 | `citation.py` | Build the citation reference scaffold. |
 | `pipeline.py` | Tie it all together; sort each species into a bucket. |
 | `output.py` | Write the `review/` files. |
 | `cli.py` | The command-line interface. |
 
-All network access goes through `wiki_client.py`, and every request in it is a
+All Wikipedia access goes through `wiki_client.py`, and every request in it is a
 read-only `GET` with a hard guard that rejects anything else. The rest of the
 package is pure local computation and can be tested with no internet at all.
 
