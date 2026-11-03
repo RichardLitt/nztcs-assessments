@@ -145,7 +145,7 @@ time-dependent is written. Two runs over the same input produce byte-identical
 | Unit | `tests/unit/` | Each module on its own, including User-Agent shape, batching, maxlag retry, cache, every patch branch, and status mapping. |
 | Integration | `tests/integration/` | The real `WikiClient` against a fake wiki (`fixtures/api_responses/site.json`) served by `responses`. Includes a byte-for-byte golden comparison of `review/` for a CSV with one row per outcome, idempotency (fresh and cached), and the no-write-requests boundary. |
 | Doctests | `src/nztcs_wiki_bot/` | Small examples in docstrings. |
-| Live | `tests/live/` | Opt-in (`pytest -m live`, needs `NZTCS_BOT_CONTACT`). One real lookup, run weekly in CI. |
+| Live | `tests/live/` | Opt-in (`pytest -m live`, needs `NZTCS_BOT_CONTACT`). One real lookup; worth running before processing a new report. |
 
 CI runs `ruff`, `pyright`, then `pytest` with a 90% coverage floor, on Python
 3.10–3.13 (Ubuntu) and 3.12 (macOS).
