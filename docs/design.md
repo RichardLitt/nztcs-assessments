@@ -104,10 +104,13 @@ elsewhere, the short `<ref name="…" />` form is used.
 ### Only emit codes Wikipedia can render
 
 The code table is restricted to what Wikipedia's `Module:Conservation status`
-displays for NZTCS. Real categories without a badge (Migrant, Vagrant,
-Coloniser, Introduced and Naturalised) go to `unmapped` as `no-wikipedia-code`,
-and titles the table has never seen go there as `unknown-status-title`. Nothing
-is guessed. See [nztcs-status-codes.md](nztcs-status-codes.md).
+displays for NZTCS. Real categories the module doesn't render yet (Coloniser,
+Migrant, Vagrant, Introduced and Naturalised) go to `unmapped` as
+`no-wikipedia-code`; their proposed codes wait in `PENDING_WIKIPEDIA_CODES`
+until the module supports them (see the
+[edit request draft](proposals/module-conservation-status-nztcs.md)). Titles the
+table has never seen go to `unmapped` as `unknown-status-title`. Nothing is
+guessed. See [nztcs-status-codes.md](nztcs-status-codes.md).
 
 ### Skip names that can't match
 

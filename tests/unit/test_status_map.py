@@ -39,10 +39,17 @@ def test_every_mapped_code_renders_on_wikipedia():
     assert set(sm.STATUS_CODES.values()) <= WIKIPEDIA_NZTCS_CODES
 
 
-@pytest.mark.parametrize("title", sorted(sm.NO_WIKIPEDIA_CODE_TITLES))
+@pytest.mark.parametrize("title", sorted(sm.PENDING_WIKIPEDIA_CODES))
 def test_titles_without_wikipedia_badge_are_unmapped(title):
     assert not sm.is_known(title)
     assert sm.unmapped_reason(title) == "no-wikipedia-code"
+
+
+def test_pending_codes_are_distinct_and_not_yet_rendered():
+    pending = list(sm.PENDING_WIKIPEDIA_CODES.values())
+    assert len(set(pending)) == len(pending)
+    rendered = WIKIPEDIA_NZTCS_CODES | {"SD", "GD", "SP", "RR"}
+    assert not {c.upper() for c in pending} & {c.upper() for c in rendered}
 
 
 def test_unknown_title_raises():
