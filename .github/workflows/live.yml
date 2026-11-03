@@ -1,0 +1,31 @@
+name: Live Wikipedia smoke test
+
+# Catches real-world MediaWiki API changes that the mocked suite can't.
+# Makes a handful of read-only requests. Requires the repository secret
+# NZTCS_BOT_CONTACT (an email or URL Wikimedia can use to reach the operator);
+# the test skips itself if it is unset.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"  # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -e ".[dev]"
+      - name: Live test
+        env:
+          NZTCS_BOT_CONTACT: ${{ secrets.NZTCS_BOT_CONTACT }}
+        run: .venv/bin/pytest -m live --no-cov -rs tests/live
