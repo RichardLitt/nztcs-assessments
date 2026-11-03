@@ -98,16 +98,24 @@ Patching is idempotent. `status_ref` is only rewritten if it doesn't already
 cite this report's ref name, and if the article already defines that ref
 elsewhere, the short `<ref name="…" />` form is used.
 
-### Never guess a status code
+### Only emit codes Wikipedia can render, and never guess
 
 `status_map.STATUS_CODES` maps each NZTCS `conservationStatusTitle` to the code
 Speciesbox expects (e.g. Nationally Critical → `NC`, as on
 [Powelliphanta augusta](https://en.wikipedia.org/wiki/Powelliphanta_augusta)).
 "Uncommon", the 2025 manual's new name for "Naturally Uncommon", also maps to
-`NU`. Titles that aren't conservation statuses ("Not assessed", "Taxonomically
-indistinct") go to `unmapped` as `non-status`. A title the table has never seen
-goes there as `unknown-status-title`, so a new NZTCS category shows up in the
-output instead of becoming a wrong edit.
+`NU`. The table is limited to the codes Wikipedia's
+[Module:Conservation status](https://en.wikipedia.org/wiki/Module:Conservation_status)
+displays for NZTCS; anything else renders as "Invalid status".
+
+Everything without a code goes to `unmapped`, with a reason:
+
+- `non-status`: titles that aren't conservation statuses ("Not assessed",
+  "Taxonomically indistinct").
+- `no-wikipedia-code`: real NZTCS categories Wikipedia has no badge for
+  (Migrant, Vagrant, Coloniser, Introduced and Naturalised).
+- `unknown-status-title`: a title the table has never seen, so a new NZTCS
+  category shows up in the output instead of becoming a wrong edit.
 
 ### Skip names that can't match
 
