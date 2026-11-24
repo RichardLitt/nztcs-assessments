@@ -214,7 +214,6 @@ def _use_color() -> bool:
     return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
 
 
-
 class Applier:
     """Walk the entries, asking before each save. Injectable for tests."""
 
