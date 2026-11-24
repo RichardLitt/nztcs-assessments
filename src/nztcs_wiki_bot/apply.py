@@ -295,12 +295,22 @@ class Applier:
         self.sleep = sleep or time.sleep
         self.open_url = open_url or webbrowser.open
         self._last_save: float | None = None
+        self._asked = False
         self.outcomes: Counter[str] = Counter()
 
-    def run(self, entries: list[Entry]) -> Counter[str]:
+    def run(self, entries: list[Entry], limit: int | None = None) -> Counter[str]:
+        """Go through ``entries``. With ``limit``, stop after asking about that
+        many; entries skipped without asking (already applied, changed, …)
+        don't count towards it."""
         total = len(entries)
+        asked = 0
         for i, entry in enumerate(entries, 1):
+            if limit is not None and asked >= limit:
+                self.say(f"\nReached --limit {limit}.")
+                break
+            self._asked = False
             outcome = self._one(entry, i, total)
+            asked += self._asked
             if outcome == "quit":
                 self.say("Stopped.")
                 break
@@ -342,6 +352,7 @@ class Applier:
                 "\nThis edit also changes text outside the infobox, such as an old "
                 "citation moved so its other uses keep working. Press d to see it."
             )
+        self._asked = True
         while True:
             answer = self.ask("\nSave this edit? [y]es [n]o [d]iff [o]pen [q]uit: ").strip().lower()
             if answer in ("d", "diff"):
@@ -440,7 +451,13 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"Minimum seconds between saves (default: {DEFAULT_INTERVAL:.0f})",
     )
     p.add_argument("--species", default=None, help="Only entries whose binomial contains this")
-    p.add_argument("--limit", type=int, default=None, help="Look at most N entries")
+    p.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Ask about at most N entries. Entries skipped without asking (already applied, "
+        "changed since the run, skipped before, …) don't count.",
+    )
     p.add_argument(
         "--show-skipped",
         action="store_true",
@@ -489,8 +506,6 @@ def main(
             )
     if args.species:
         entries = [e for e in entries if args.species.lower() in e.binomial.lower()]
-    if args.limit is not None:
-        entries = entries[: args.limit]
     if not entries:
         print("Nothing to apply.")
         return 0
@@ -508,8 +523,9 @@ def main(
 
     print(
         f"Logged in as {account}. Edits are saved from this account, and you're "
-        f"responsible for each one.\n{len(entries)} entries to look at; nothing is saved "
-        "unless you answer y."
+        f"responsible for each one.\n{len(entries)} entries to look at"
+        + (f", asking about at most {args.limit}" if args.limit is not None else "")
+        + "; nothing is saved unless you answer y."
     )
     tool_page = args.tool_page or TOOL_PAGE.format(account=account)
     if editor.get_page(tool_page).missing:
@@ -522,7 +538,7 @@ def main(
     applier = Applier(
         editor, review / "applied.tsv", ask=ask, interval=args.interval, note=tool_note(tool_page)
     )
-    outcomes = applier.run(entries)
+    outcomes = applier.run(entries, limit=args.limit)
     summary = ", ".join(f"{k} {v}" for k, v in sorted(outcomes.items())) or "nothing done"
     print(f"\nDone: {summary}. Log: {review / 'applied.tsv'}")
     return 0
