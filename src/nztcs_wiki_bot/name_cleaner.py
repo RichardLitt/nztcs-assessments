@@ -4,11 +4,22 @@ The NZTCS ``nztcsSpeciesName`` carries the author + year and assorted
 annotations, e.g. ``"Aenetus virescens (Doubleday, 1843)"``. Wikipedia article
 titles use the bare binomial, so we strip the authority before lookup.
 
-Two classes of name are skipped before any Wikipedia lookup (per the design):
+These names are skipped before any Wikipedia lookup (per the design):
 
 * **undescribed** — contains an ``sp.`` placeholder (``Archyala sp. A (...)``).
 * **quoted-genus** — the genus is in scare quotes (``"Acroclita" discariana``),
   signalling an uncertain generic assignment that won't match an article.
+* **uncertain identification** — ``cf.`` or ``aff.`` before the epithet
+  (``Chalastra cf. pellurgata``): a provisional identification, not the
+  named species.
+* **subspecies** — a trinomial (``Vanessa gonerilla ida``). The assessment is
+  for the subspecies, so it must not go on the species article.
+* **taxon concept** — ``s.l.`` / ``s.s.`` after the species
+  (``Pyrgotis pyramidias s.s.``): the report assesses a broad or narrow concept
+  of the species separately, so neither status belongs to the article as such.
+
+A ``s.l.`` / ``s.s.`` straight after the *genus* (``Hierodoris s.l. insignis``)
+only qualifies the genus, so it is dropped and the species is looked up.
 """
 
 from __future__ import annotations
@@ -20,6 +31,19 @@ from dataclasses import dataclass
 # An undescribed-species marker: "sp." optionally followed by a designator.
 # Matches "sp.", "sp. A", "sp. nov.", "spp.".
 _UNDESCRIBED_RE = re.compile(r"\bsp{1,2}\.", re.IGNORECASE)
+
+# "cf." / "aff.": the specimen is compared with, or akin to, the named species.
+_UNCERTAIN_RE = re.compile(r"\b(?:cf|aff)\.", re.IGNORECASE)
+
+# Sensu lato / sensu stricto, abbreviated or not.
+_SENSU = r"(?:s\.\s?[ls]\.|sensu\s+(?:lato|stricto))"
+# ... straight after the genus: qualifies the genus only, so drop it.
+_GENUS_SENSU_RE = re.compile(r"^([A-Z][a-zÀ-ſ-]+)\s+" + _SENSU + r"\s+", re.IGNORECASE)
+# ... after the species: a separately assessed concept of the species.
+_SPECIES_SENSU_RE = re.compile(r"^[A-Z][a-zÀ-ſ-]+\s+[a-zÀ-ſ-]+\s+" + _SENSU, re.IGNORECASE)
+
+# Lowercase words that can start an authority and so aren't subspecies names.
+_AUTHORITY_PARTICLES = frozenset({"de", "von", "van", "der", "du", "da", "di", "la", "le"})
 
 # Leading double quote (straight or curly) marks a scare-quoted genus.
 _QUOTED_GENUS_RE = re.compile(r'^\s*["“”‘’]')
@@ -36,6 +60,9 @@ _BINOMIAL_RE = re.compile(
 SKIP_UNDESCRIBED = "undescribed"
 SKIP_QUOTED_GENUS = "quoted_genus"
 SKIP_UNPARSEABLE = "unparseable_name"
+SKIP_UNCERTAIN = "uncertain_identification"
+SKIP_SUBSPECIES = "subspecies"
+SKIP_TAXON_CONCEPT = "taxon_concept"
 
 
 @dataclass(frozen=True)
@@ -80,6 +107,14 @@ def clean_name(raw: str) -> CleanName:
     'undescribed'
     >>> clean_name('"Acroclita" discariana Philpott, 1930').skip_reason
     'quoted_genus'
+    >>> clean_name("Vanessa gonerilla ida (Alfken, 1899)").skip_reason
+    'subspecies'
+    >>> clean_name("Pyrgotis pyramidias s.s. Meyrick, 1901").skip_reason
+    'taxon_concept'
+    >>> clean_name("Chalastra cf. pellurgata (NZAC04193100)").skip_reason
+    'uncertain_identification'
+    >>> clean_name("Hierodoris s.l. insignis Philpott, 1926").binomial
+    'Hierodoris insignis'
     """
     text = _normalise(raw)
 
@@ -87,23 +122,19 @@ def clean_name(raw: str) -> CleanName:
         return CleanName(raw=raw, skip_reason=SKIP_QUOTED_GENUS)
     if _UNDESCRIBED_RE.search(text):
         return CleanName(raw=raw, skip_reason=SKIP_UNDESCRIBED)
+    if _UNCERTAIN_RE.search(text):
+        return CleanName(raw=raw, skip_reason=SKIP_UNCERTAIN)
+    if _SPECIES_SENSU_RE.match(text):
+        return CleanName(raw=raw, skip_reason=SKIP_TAXON_CONCEPT)
+    text = _GENUS_SENSU_RE.sub(r"\1 ", text)
 
     m = _BINOMIAL_RE.match(text)
     if not m:
         return CleanName(raw=raw, skip_reason=SKIP_UNPARSEABLE)
 
-    genus, species, subspecies = m.group(1), m.group(2), m.group(3)
-    # A bare subspecies word is only kept if it is not the start of an authority
-    # (authorities start with an uppercase letter, already excluded by the regex
-    # requiring a lowercase token). Build the canonical binomial.
-    parts = [genus, species]
-    if subspecies:
-        parts.append(subspecies)
-    binomial = " ".join(parts[:2])  # Wikipedia titles key on genus + species
-    return CleanName(
-        raw=raw,
-        binomial=binomial,
-        genus=genus,
-        species=species,
-        subspecies=subspecies,
-    )
+    genus, species, third = m.group(1), m.group(2), m.group(3)
+    # Authorities start with an uppercase letter, which the regex already
+    # excludes, or with a lowercase particle such as "de".
+    if third and third.lower() not in _AUTHORITY_PARTICLES:
+        return CleanName(raw=raw, skip_reason=SKIP_SUBSPECIES)
+    return CleanName(raw=raw, binomial=f"{genus} {species}", genus=genus, species=species)

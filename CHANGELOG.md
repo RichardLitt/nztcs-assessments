@@ -57,6 +57,13 @@ All notable changes to this project are documented here. The format follows
   the article also reuses elsewhere as `<ref name="X" />`, leaving those reuses
   as cite errors. The definition now moves to its first remaining use, and
   `apply` says when an edit changes text outside the infobox.
+- A subspecies row (`Vanessa gonerilla ida`) was cut down to its species and
+  patched onto the species article, claiming a subspecies' status for the
+  whole species. Subspecies are now skipped (`subspecies`). So are `s.l.`/`s.s.`
+  concepts of a species (`taxon_concept`) and `cf.`/`aff.` identifications
+  (`uncertain_identification`), which had been looked up as nonsense titles
+  such as "Chalastra cf". A `s.l.` after the genus (`Hierodoris s.l. insignis`)
+  is now dropped, so the species is found.
 
 ## [0.1.0] - 2026-11-24
 
