@@ -98,7 +98,36 @@ update, the old line is shown with `-` and the new one with `+`. Set
 
 The edit summary says what changed and that it was an assisted edit, for
 example `Add NZTCS conservation status: Not Threatened (NT); assisted edit with
-nztcs-wiki-bot`. Edits aren't marked minor.
+[[User:Richlitt/nztcs-wiki-bot|nztcs-wiki-bot]]`. Edits aren't marked minor.
+
+### A page explaining the tool
+
+Editors who see these edits in their watchlist will want to know what made
+them and who to ask. If the page `User:<your account>/nztcs-wiki-bot` exists,
+every edit summary links to it. If it doesn't, `apply` reminds you at the start
+and the summary says `assisted edit with nztcs-wiki-bot` without a link. Use
+`--tool-page` to link somewhere else.
+
+A draft to start from (replace `YOU` with your username):
+
+```wikitext
+'''nztcs-wiki-bot''' is a tool I use to add [[New Zealand Threat Classification System]]
+(NZTCS) conservation statuses to species infoboxes, from the Department of
+Conservation's published assessments.
+
+* '''How it works:''' it reads an NZTCS report, finds the matching article, checks that the
+  infobox's genus and species match, and prepares the change. I review every edit and save
+  it myself; nothing is saved without my confirmation.
+* '''What it changes:''' only the <code>status</code>, <code>status_system</code> and
+  <code>status_ref</code> lines of the infobox (or <code>status2</code> and so on when the
+  infobox already shows another system). The citation is {{tl|CiteQ}} for the report's
+  Wikidata item.
+* '''What it skips:''' articles edited since I last checked, articles with {{tl|nobots}},
+  and anything it can't match with confidence.
+* '''Source code:''' https://github.com/RichardLitt/nztcs-assessments
+
+If something looks wrong, please tell me on [[User talk:YOU|my talk page]]. I'll stop and fix it.
+```
 
 ## What it checks before asking
 

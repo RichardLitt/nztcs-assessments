@@ -63,7 +63,8 @@ class FakeWiki:
             return self._ok({"query": {"userinfo": {"name": "Richlitt", "messages": has}}})
         if p.get("prop") == "revisions":
             title = p["titles"]
-            self.fetched.append(title)
+            if not title.startswith("User:"):  # articles only, not the tool page
+                self.fetched.append(title)
             page = self.pages.get(title)
             if page is None:
                 return self._ok({"curtimestamp": "2026-11-24T01:00:00Z",
