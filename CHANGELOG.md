@@ -6,12 +6,7 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-### Fixed
-
-- `stats.txt` reported `balanced False` whenever `--species` or `--limit` was
-  used. Rows left out by those filters are now counted as `filtered`.
-
-## [0.1.0] - unreleased
+## [0.1.0] - 2026-11-24
 
 First version.
 
@@ -19,7 +14,9 @@ First version.
 
 - `nztcs-wiki-bot` command. It reads an NZTCS report CSV and writes a review
   queue (`review/matched.md`, `ambiguous.md`, `unmapped.tsv`, `no_match.tsv`,
-  `skipped.tsv`, `stats.txt`) of Speciesbox patches.
+  `skipped.tsv`, `stats.txt`) of Speciesbox patches. `stats.txt` accounts for
+  every input row, counting rows left out by `--species` or `--limit` as
+  `filtered`, and reports whether the totals balance.
 - `nztcs-wiki-bot fetch REPORT_ID` downloads a report from nztcs.org.nz,
   following pagination.
 - Three patch modes: insert a new status, update an existing NZTCS status, or
@@ -30,10 +27,22 @@ First version.
   required operator contact (`--contact` / `NZTCS_BOT_CONTACT`), `maxlag`
   backoff, 50-title batching, a 1 request/sec floor, and an on-disk cache.
 - Offline test suite (unit, integration with golden output, doctests), an
-  opt-in live test, and CI on Python 3.10–3.13.
+  opt-in live test to run by hand before processing a new report, and CI on
+  Python 3.10–3.13.
+- User guides for adding a report, reviewing the output, NZTCS status codes,
+  and Wikipedia API policy, plus CONTRIBUTING and a code of conduct.
 
 ### Notes
 
-- NZTCS categories Wikipedia can't display (Migrant, Vagrant, Coloniser,
-  Introduced and Naturalised) go to `unmapped.tsv` rather than producing
-  patches that would render as "Invalid status".
+- NZTCS statuses Wikipedia can't display go to `unmapped.tsv` with the reason
+  `no-wikipedia-code`, rather than producing patches that would render as
+  "Invalid status". These are Coloniser, Migrant, Vagrant, Introduced and
+  Naturalised, and Uncommon where the population state isn't natural
+  (Uncommon with a natural state is patched as `NU`). Adding them to
+  Wikipedia's Module:Conservation status has been requested; see
+  [docs/proposals/module-conservation-status-nztcs.md](docs/proposals/module-conservation-status-nztcs.md).
+- NZTCS qualifiers are read but not yet used
+  ([#8](https://github.com/RichardLitt/nztcs-assessments/issues/8)).
+
+[Unreleased]: https://github.com/RichardLitt/nztcs-assessments/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/RichardLitt/nztcs-assessments/releases/tag/v0.1.0
