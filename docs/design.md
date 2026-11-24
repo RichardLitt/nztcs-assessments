@@ -94,9 +94,15 @@ case-insensitively, ignoring markup. Anything else goes to `ambiguous`.
 2. **Another system, e.g. IUCN**: leave it alone and add `status2`,
    `status2_system = NZTCS`, `status2_ref` (action `add_secondary`, or
    `update` if an NZTCS secondary already exists).
-3. **No status**: insert `status`, `status_system`, `status_ref` after the last
-   of `authority` / `taxon` / `species` / `genus` / `name`, matching the
-   template's documented order (action `insert`).
+3. **No status**: insert `status`, `status_system`, `status_ref` just before
+   the first taxon parameter (`taxon`, `genus`, `species`, `regnum`, an
+   `unranked_*` rank and so on), so they sit after the name and image lines.
+   That's where the Speciesbox and Taxobox documentation and most articles put
+   them (80 of the 88 moth articles citing the 2025 report). With no taxon
+   parameter, they're appended (action `insert`).
+
+New `status2*` lines go straight after the existing status block. Lines that
+already exist are updated where they are and never moved.
 
 Patching is idempotent. `status_ref` is only rewritten if it doesn't already
 cite this report's ref name, and if the article already defines that ref

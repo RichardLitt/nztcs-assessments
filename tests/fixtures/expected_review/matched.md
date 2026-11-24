@@ -12,16 +12,16 @@ _2 confident matches. Review each diff against the live article before pasting._
 ```diff
 --- Pūriri moth (current)
 +++ Pūriri moth (proposed)
-@@ -4,6 +4,9 @@
- | genus = Aenetus
- | species = virescens
- | authority = ([[Edward Doubleday|Doubleday]], 1843)
+@@ -1,6 +1,9 @@
+ {{Short description|Species of moth endemic to New Zealand}}
+ {{Speciesbox
+ | image = Aenetus virescens.jpg
 +| status = NV
 +| status_system = NZTCS
 +| status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
- }}
- The '''pūriri moth''' (''Aenetus virescens'') is a large moth endemic to the
- [[North Island]] of [[New Zealand]].
+ | genus = Aenetus
+ | species = virescens
+ | authority = ([[Edward Doubleday|Doubleday]], 1843)
 ```
 
 <a id="speciesId-2"></a>

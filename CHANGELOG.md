@@ -17,6 +17,11 @@ All notable changes to this project are documented here. The format follows
   Wikidata ID or full-text URL), the patch reuses it as `<ref name="..." />`
   instead of adding a second citation. Articles that already show the current
   status with that citation are now `already-current` rather than rewritten.
+- New `status` lines go before the first taxon parameter (`genus`, `taxon`,
+  `regnum`…), after the name and image lines, instead of after `authority`.
+  That matches the Speciesbox documentation and most articles. New `status2`
+  lines go straight after the existing status block instead of at the end of
+  the infobox.
 
 ### Fixed
 

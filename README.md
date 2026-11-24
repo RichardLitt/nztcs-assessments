@@ -91,11 +91,11 @@ Each entry in `matched.md` looks like this:
 - **Patch action:** insert
 
 ```diff
- | authority = ([[Edward Doubleday|Doubleday]], 1843)
+ | image = Aenetus virescens.jpg
 +| status = NT
 +| status_system = NZTCS
 +| status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
- }}
+ | genus = Aenetus
 ```
 ````
 
