@@ -61,20 +61,16 @@ def run(rows: list[Row], client: WikiReader, config: PipelineConfig | None = Non
 
         # Status mapping — fail loud per design, route to unmapped bucket.
         title_status = row.conservation_status_title
-        if not status_map.is_known(title_status):
+        code = status_map.code_for(title_status, row.criteria_title)
+        if code is None:
             buckets.unmapped.append(
                 {
                     "binomial": binomial,
                     "status_title": title_status,
-                    "reason": (
-                        "non-status"
-                        if title_status in status_map.NON_STATUS_TITLES
-                        else "unknown-status-title"
-                    ),
+                    "reason": status_map.unmapped_reason(title_status),
                 }
             )
             continue
-        code = status_map.status_code(title_status)
 
         res = resolved.get(binomial)
         if res is None or res.missing or not res.canonical:

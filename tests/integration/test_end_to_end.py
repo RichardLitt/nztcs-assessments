@@ -2,7 +2,8 @@
 
 The input (``fixtures/csv/end_to_end.csv``) has one row per outcome: insert,
 update, taxon mismatch, disambiguation, no infobox, empty page, missing page,
-two skip rules, a non-status title and a never-seen status title.
+two skip rules, a non-status title, a title with no Wikipedia badge, and a
+never-seen status title.
 
 To regenerate the golden files after an intentional output change::
 
@@ -51,5 +52,5 @@ def test_output_matches_golden(tmp_path):
 
 def test_every_row_lands_in_exactly_one_bucket(tmp_path):
     stats = (run_cli(tmp_path) / "stats.txt").read_text(encoding="utf-8")
-    assert "rows_in    11" in stats
+    assert "rows_in    12" in stats
     assert "balanced   True" in stats

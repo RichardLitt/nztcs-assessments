@@ -17,16 +17,57 @@ STATUS_CSV = Path(__file__).parents[1] / "fixtures" / "csv" / "all_status_titles
         ("Nationally Vulnerable", "NV"),
         ("Declining", "D"),
         ("Naturally Uncommon", "NU"),
-        ("Uncommon", "NU"),  # 2025 rename
         ("Not Threatened", "NT"),
         ("Data Deficient", "DD"),
-        ("Coloniser", "C"),
-        ("Vagrant", "V"),
-        ("Introduced and Naturalised", "IN"),
+        ("Nationally Increasing", "NI"),
+        ("Recovering", "R"),
+        ("Relict", "Rel"),
+        ("Extinct", "EX"),
     ],
 )
 def test_known_titles_map(title, code):
     assert sm.status_code(title) == code
+
+
+# Every code Module:Conservation status renders for NZTCS (p.NZTCS, checked
+# 2026-11-03), excluding the 2002-era SD/GD/SP/RR that NZTCS no longer issues.
+WIKIPEDIA_NZTCS_CODES = {"EX", "NC", "NE", "NV", "NI", "D", "Rel", "NU", "R", "NT", "DD"}
+
+
+def test_every_mapped_code_renders_on_wikipedia():
+    assert set(sm.STATUS_CODES.values()) <= WIKIPEDIA_NZTCS_CODES
+
+
+@pytest.mark.parametrize("title", sorted(sm.PENDING_WIKIPEDIA_CODES))
+def test_titles_without_wikipedia_badge_are_unmapped(title):
+    assert not sm.is_known(title)
+    assert sm.unmapped_reason(title) == "no-wikipedia-code"
+
+
+def test_pending_codes_are_distinct_and_not_yet_rendered():
+    pending = list(sm.PENDING_WIKIPEDIA_CODES.values())
+    assert len(set(pending)) == len(pending)
+    rendered = WIKIPEDIA_NZTCS_CODES | {"SD", "GD", "SP", "RR"}
+    assert not {c.upper() for c in pending} & {c.upper() for c in rendered}
+
+
+@pytest.mark.parametrize(
+    "criteria, code",
+    [
+        ("UNCn2j", "NU"),  # natural population state
+        ("UNCu2l", None),  # unnatural
+        ("UNCx2k", None),  # unknown is treated as unnatural
+        ("", None),
+    ],
+)
+def test_uncommon_is_naturally_uncommon_only_when_natural(criteria, code):
+    assert sm.code_for("Uncommon", criteria) == code
+
+
+def test_code_for_matches_status_code_for_other_titles():
+    for title, code in sm.STATUS_CODES.items():
+        assert sm.code_for(title, "") == code
+    assert sm.code_for("Vagrant") is None
 
 
 def test_unknown_title_raises():
@@ -54,6 +95,6 @@ def test_every_real_status_is_known_or_explicitly_non_status():
     with STATUS_CSV.open(encoding="utf-8") as f:
         titles = {r["conservationStatusTitle"] for r in csv.DictReader(f)}
     unaccounted = {
-        t for t in titles if not sm.is_known(t) and t not in sm.NON_STATUS_TITLES
+        t for t in titles if not sm.is_known(t) and sm.unmapped_reason(t) == "unknown-status-title"
     }
     assert not unaccounted, f"status titles need a mapping decision: {unaccounted}"

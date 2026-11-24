@@ -1,8 +1,9 @@
 """Map NZTCS ``conservationStatusTitle`` values to Speciesbox ``|status=`` codes.
 
-The mapping is verified against
-https://en.wikipedia.org/wiki/Wikipedia:Conservation_status and real articles
-(e.g. *Powelliphanta augusta* uses ``status = NC``, ``status_system = NZTCS``).
+Only codes that Wikipedia can actually render are mapped. The source of truth is
+the ``p.NZTCS`` function in
+https://en.wikipedia.org/wiki/Module:Conservation_status, which shows
+"Invalid status" (and adds a maintenance category) for anything else.
 
 Design rule: the bot must **fail loudly** on an unknown status title rather than
 silently skip it, so a new NZTCS category can never slip through as a missing
@@ -22,15 +23,9 @@ STATUS_CODES: dict[str, str] = {
     "Recovering": "R",
     "Relict": "Rel",
     "Naturally Uncommon": "NU",
-    # 2025 manual renamed "Naturally Uncommon" -> "Uncommon"; same category.
-    "Uncommon": "NU",
     "Not Threatened": "NT",
     "Data Deficient": "DD",
     "Extinct": "EX",
-    "Migrant": "M",
-    "Vagrant": "V",
-    "Coloniser": "C",
-    "Introduced and Naturalised": "IN",
 }
 
 # Titles that appear in NZTCS data but are deliberately NOT conservation codes:
@@ -43,6 +38,40 @@ NON_STATUS_TITLES: frozenset[str] = frozenset(
         "Taxonomically indistinct",
     }
 )
+
+
+# Real NZTCS statuses that Wikipedia's Module:Conservation status doesn't render
+# yet. Patching these would show "Invalid status", so they are routed to
+# ``unmapped`` instead. The codes are the ones proposed in
+# docs/proposals/module-conservation-status-nztcs.md; once the module accepts
+# them, move these entries into STATUS_CODES.
+PENDING_WIKIPEDIA_CODES: dict[str, str] = {
+    "Coloniser": "CO",
+    "Migrant": "MI",
+    "Vagrant": "VA",
+    "Introduced and Naturalised": "IN",
+    # The 2022 manual widened "Naturally Uncommon" into "Uncommon", which also
+    # covers populations that are small because of human impact. Only the
+    # natural ones can be shown as Wikipedia's NU; see code_for().
+    "Uncommon": "U",
+}
+
+
+def unmapped_reason(title: str) -> str:
+    """Why a title has no code: ``non-status``, ``no-wikipedia-code`` or
+    ``unknown-status-title`` (a title this table has never seen).
+
+    >>> unmapped_reason("Vagrant")
+    'no-wikipedia-code'
+    >>> unmapped_reason("Something New")
+    'unknown-status-title'
+    """
+    key = (title or "").strip()
+    if key in NON_STATUS_TITLES:
+        return "non-status"
+    if key in PENDING_WIKIPEDIA_CODES:
+        return "no-wikipedia-code"
+    return "unknown-status-title"
 
 
 class UnknownStatusError(ValueError):
@@ -58,7 +87,7 @@ def status_code(title: str) -> str:
 
     >>> status_code("Nationally Critical")
     'NC'
-    >>> status_code("Uncommon")
+    >>> status_code("Naturally Uncommon")
     'NU'
 
     Raises :class:`UnknownStatusError` on an unmapped title.
@@ -68,6 +97,28 @@ def status_code(title: str) -> str:
         return STATUS_CODES[key]
     except KeyError:
         raise UnknownStatusError(title) from None
+
+
+def code_for(title: str, criteria: str = "") -> str | None:
+    """Return the Speciesbox code for a row, or ``None`` if there isn't one.
+
+    Like :func:`status_code`, but also uses the row's criteria code. An
+    "Uncommon" taxon renders as ``NU`` ("Naturally Uncommon") only when its
+    criteria code records a natural population state (``UNCn…``). The manual
+    treats an unknown state as unnatural, so ``UNCx…`` and a blank criteria
+    code don't qualify.
+
+    >>> code_for("Declining", "DECu3k")
+    'D'
+    >>> code_for("Uncommon", "UNCn2j")
+    'NU'
+    >>> code_for("Uncommon", "UNCu2l") is None
+    True
+    """
+    key = (title or "").strip()
+    if key == "Uncommon":
+        return "NU" if (criteria or "").strip().startswith("UNCn") else None
+    return STATUS_CODES.get(key)
 
 
 def is_known(title: str) -> bool:
