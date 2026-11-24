@@ -91,6 +91,34 @@ def load_entries(path: Path) -> list[Entry]:
     return entries
 
 
+def previously_skipped(log_path: Path) -> set[tuple[str, str]]:
+    """``(species_id, title)`` pairs whose latest decision in the log is a skip.
+
+    Only your own answers count: ``skipped`` (you said n) and ``saved``. If you
+    saved an entry after skipping it, the save wins. Other outcomes (``changed``,
+    ``error:…`` and so on) aren't decisions and are ignored.
+
+    >>> import tempfile
+    >>> log = Path(tempfile.mkdtemp()) / "applied.tsv"
+    >>> _ = log.write_text(
+    ...     "time\\tspecies_id\\ttitle\\toutcome\\trevid\\n"
+    ...     "t\\t1\\tMonarch butterfly\\tskipped\\t\\n"
+    ...     "t\\t2\\tYellow admiral\\tskipped\\t\\n"
+    ...     "t\\t2\\tYellow admiral\\tsaved\\t99\\n"
+    ...     "t\\t3\\tZizina otis\\tchanged\\t\\n")
+    >>> sorted(previously_skipped(log))
+    [('1', 'Monarch butterfly')]
+    """
+    if not log_path.exists():
+        return set()
+    latest: dict[tuple[str, str], str] = {}
+    for line in log_path.read_text(encoding="utf-8").splitlines()[1:]:
+        cols = line.split("\t")
+        if len(cols) >= 4 and cols[3] in ("skipped", "saved"):
+            latest[(cols[1], cols[2])] = cols[3]
+    return {key for key, outcome in latest.items() if outcome == "skipped"}
+
+
 def tool_note(tool_page: str | None) -> str:
     """The end of every edit summary: a link to the tool page, if there is one.
 
@@ -414,6 +442,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--species", default=None, help="Only entries whose binomial contains this")
     p.add_argument("--limit", type=int, default=None, help="Look at most N entries")
     p.add_argument(
+        "--show-skipped",
+        action="store_true",
+        help="Also show entries you skipped (answered n) in earlier sessions. They're hidden "
+        "by default; the record is kept in applied.tsv in the review folder.",
+    )
+    p.add_argument(
         "--tool-page",
         default=None,
         help="Page explaining the tool, linked from edit summaries once it exists "
@@ -444,6 +478,15 @@ def main(
         return 2
 
     entries = load_entries(jsonl)
+    if not args.show_skipped:
+        skipped_before = previously_skipped(review / "applied.tsv")
+        hidden = [e for e in entries if (e.species_id, e.title) in skipped_before]
+        if hidden:
+            entries = [e for e in entries if (e.species_id, e.title) not in skipped_before]
+            print(
+                f"Not showing {len(hidden)} entr{'y' if len(hidden) == 1 else 'ies'} you skipped "
+                "before. Use --show-skipped to see them again."
+            )
     if args.species:
         entries = [e for e in entries if args.species.lower() in e.binomial.lower()]
     if args.limit is not None:

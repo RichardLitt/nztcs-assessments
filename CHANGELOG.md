@@ -28,6 +28,11 @@ All notable changes to this project are documented here. The format follows
   name), and warns if it doesn't name the new status. The infobox patch never
   changes prose, so the text would otherwise contradict the infobox.
 
+- `apply` remembers entries you skipped (answered `n`) and doesn't show them
+  in later sessions, even after re-running the tool or deleting `cache/`.
+  `--show-skipped` shows them again. The record is the existing
+  `review/applied.tsv`.
+
 ### Changed
 
 - Citations for known reports are now complete: `status_ref` is
