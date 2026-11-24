@@ -170,3 +170,79 @@ def test_bare_ref_name_counts_as_defined():
 def test_ref_names_are_case_sensitive():
     assert not sb._ref_defined('<ref name="hoare2026">x</ref>', "Hoare2026")
     assert not sb._ref_name_in('<ref name="hoare2026" />', "Hoare2026")
+
+
+# -- where new lines go -------------------------------------------------------
+
+_REF = '<ref name="NZTCS2025" />'
+
+
+def _order(wt: str) -> list[str]:
+    ib = sb.find_infobox(wt)
+    assert ib is not None
+    return [str(p.name).strip() for p in ib.template.params]
+
+
+def _patched_order(wt: str, genus="Aenetus", species="virescens") -> list[str]:
+    return _order(sb.patch_status(wt, genus, species, "NV", "NZTCS2025", _REF).after)
+
+
+def test_insert_goes_before_genus_after_image():
+    assert _patched_order(wikitext("puriri_moth")) == [
+        "image", "status", "status_system", "status_ref", "genus", "species", "authority",
+    ]
+
+
+def test_insert_goes_before_taxon():
+    assert _patched_order(wikitext("taxon_shorthand")) == [
+        "status", "status_system", "status_ref", "taxon", "authority",
+    ]
+
+
+def test_insert_in_legacy_taxobox_goes_after_name():
+    order = _patched_order(wikitext("taxobox_legacy"), "Aoraia", "oreobolae")
+    assert order[:5] == ["name", "status", "status_system", "status_ref", "genus"]
+
+
+def test_insert_goes_before_unranked_rank():
+    wt = (
+        "{{Taxobox\n| name = X\n| unranked_classis = Y\n"
+        "| genus = Aenetus\n| species = virescens\n}}"
+    )
+    assert _patched_order(wt)[:5] == [
+        "name", "status", "status_system", "status_ref", "unranked_classis",
+    ]
+
+
+def test_insert_appends_when_no_taxon_params():
+    wt = "{{Speciesbox\n| name = Odd\n| image = x.jpg\n}}"
+    order = _order(sb.patch_status(wt, "", "", "NV", "NZTCS2025", _REF).after)
+    assert order == ["name", "image", "status", "status_system", "status_ref"]
+
+
+def test_secondary_goes_right_after_primary_block():
+    wt = (
+        "{{Speciesbox\n| image = x.jpg\n| status = LC\n| status_system = IUCN3.1\n"
+        "| status_ref = <ref>i</ref>\n| genus = Aenetus\n| species = virescens\n}}"
+    )
+    assert _patched_order(wt) == [
+        "image", "status", "status_system", "status_ref",
+        "status2", "status2_system", "status2_ref", "genus", "species",
+    ]
+
+
+def test_update_does_not_move_existing_lines():
+    wt = wikitext("powelliphanta_augusta")
+    result = sb.patch_status(wt, "Powelliphanta", "augusta", "NE", "NZTCS2025", _REF)
+    assert result.action == "update"
+    assert _order(result.after) == _order(wt)
+
+
+def test_placement_is_idempotent_for_secondary():
+    wt = (
+        "{{Speciesbox\n| status = LC\n| status_system = IUCN3.1\n| status_ref = <ref>i</ref>\n"
+        "| genus = Aenetus\n| species = virescens\n}}"
+    )
+    first = sb.patch_status(wt, "Aenetus", "virescens", "NV", "NZTCS2025", _REF)
+    second = sb.patch_status(first.after, "Aenetus", "virescens", "NV", "NZTCS2025", _REF)
+    assert second.action == "noop" and second.after == first.after

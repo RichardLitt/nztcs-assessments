@@ -19,6 +19,7 @@ from dataclasses import dataclass
 
 import mwparserfromhell
 from mwparserfromhell.nodes import Template
+from mwparserfromhell.nodes.extras import Parameter
 from mwparserfromhell.wikicode import Wikicode
 
 INFOBOX_NAMES = {
@@ -29,8 +30,13 @@ INFOBOX_NAMES = {
     "automatic taxobox",
 }
 
-# Parameters, in template-documented order, that a status block sits after.
-_ANCHOR_PARAMS = ("authority", "taxon", "species", "genus", "name")
+# Parameters that start the taxon part of an infobox. The Speciesbox and
+# Taxobox documentation put the status block after the name and image
+# parameters and before these, as do most articles. Any ``unranked_*`` rank
+# (legacy Taxobox) also counts.
+_TAXON_START_PARAMS = frozenset(
+    {"taxon", "parent", "genus", "species", "subspecies", "variety", "regnum", "binomial"}
+)
 
 
 @dataclass
@@ -123,13 +129,25 @@ class PatchResult:
         return self.before != self.after
 
 
-def _anchor_index(tmpl: Template) -> int:
-    """Index in tmpl.params after which a new status block should be inserted."""
-    best = -1
-    for i, param in enumerate(tmpl.params):
-        if param.name.strip().lower() in _ANCHOR_PARAMS:
-            best = i
-    return best
+def _taxon_start(tmpl: Template) -> Parameter | None:
+    """The first taxon/classification parameter, which a new status block goes
+    before. ``None`` if the infobox has none, in which case the block is appended.
+    """
+    for param in tmpl.params:
+        name = param.name.strip().lower()
+        if name in _TAXON_START_PARAMS or name.startswith("unranked_"):
+            return param
+    return None
+
+
+def _primary_block_end(tmpl: Template) -> Parameter | None:
+    """The last of ``status`` / ``status_system`` / ``status_ref``, which a new
+    ``status2`` block goes after."""
+    last = None
+    for param in tmpl.params:
+        if param.name.strip().lower() in ("status", "status_system", "status_ref"):
+            last = param
+    return last
 
 
 def patch_status(
@@ -147,7 +165,8 @@ def patch_status(
     1. Already ``status_system = NZTCS`` → update ``status`` + ``status_ref``.
     2. A non-NZTCS ``status_system`` (e.g. IUCN3.1) → add ``status2*`` block.
     3. No status block → insert ``status`` / ``status_system`` / ``status_ref``
-       after the taxon/authority params.
+       before the first taxon parameter (``taxon``, ``genus``, ``regnum``…),
+       where the template documentation and most articles put it.
 
     Idempotent: re-running on already-patched wikitext is a no-op.
     """
@@ -227,32 +246,44 @@ def _add_secondary(tmpl: Template, status_code: str, ref_value: str, ref_name: s
         tmpl.get("status2_system").value
     ).upper().startswith("NZTCS")
     changed = False
+    # New status2* lines go straight after the primary status block, in order.
+    after = _primary_block_end(tmpl)
     has_code = tmpl.has("status2") and _clean_param(tmpl.get("status2").value) == status_code
     if not has_code:
-        tmpl.add("status2", status_code, preserve_spacing=True)
+        after = _set_after(tmpl, after, "status2", status_code)
         changed = True
+    elif tmpl.has("status2"):
+        after = tmpl.get("status2")
     if not has_nztcs_secondary:
-        tmpl.add("status2_system", "NZTCS", preserve_spacing=True)
+        after = _set_after(tmpl, after, "status2_system", "NZTCS")
         changed = True
+    elif tmpl.has("status2_system"):
+        after = tmpl.get("status2_system")
     if not (tmpl.has("status2_ref") and _ref_name_in(tmpl.get("status2_ref").value, ref_name)):
-        tmpl.add("status2_ref", ref_value, preserve_spacing=True)
+        _set_after(tmpl, after, "status2_ref", ref_value)
         changed = True
     if not changed:
         return "noop"
     return "update" if has_nztcs_secondary else "add_secondary"
 
 
-def _insert_primary(tmpl: Template, status_code: str, ref_value: str) -> str:
-    anchor = _anchor_index(tmpl)
-    # mwparserfromhell ``add`` appends; to control position we insert relative to
-    # the anchor param using ``before``.
-    if anchor >= 0 and anchor + 1 < len(tmpl.params):
-        before_param = tmpl.params[anchor + 1]
-        tmpl.add("status", status_code, before=before_param, preserve_spacing=True)
-        tmpl.add("status_system", "NZTCS", before=before_param, preserve_spacing=True)
-        tmpl.add("status_ref", ref_value, before=before_param, preserve_spacing=True)
+def _set_after(tmpl: Template, after: Parameter | None, name: str, value: str) -> Parameter:
+    """Set ``name``; if it's new, place it right after ``after`` (or append).
+
+    An existing parameter is updated where it is, never moved.
+    """
+    if tmpl.has(name) or after is None:
+        tmpl.add(name, value, preserve_spacing=True)
     else:
-        tmpl.add("status", status_code, preserve_spacing=True)
-        tmpl.add("status_system", "NZTCS", preserve_spacing=True)
-        tmpl.add("status_ref", ref_value, preserve_spacing=True)
+        tmpl.add(name, value, after=after, preserve_spacing=True)
+    return tmpl.get(name)
+
+
+def _insert_primary(tmpl: Template, status_code: str, ref_value: str) -> str:
+    # Each line goes before the same taxon parameter, so they keep this order.
+    # With no taxon parameter, ``before=None`` appends.
+    before = _taxon_start(tmpl)
+    tmpl.add("status", status_code, before=before, preserve_spacing=True)
+    tmpl.add("status_system", "NZTCS", before=before, preserve_spacing=True)
+    tmpl.add("status_ref", ref_value, before=before, preserve_spacing=True)
     return "insert"

@@ -38,8 +38,11 @@ Click **Edit source** (not the visual editor). The infobox is near the top:
 
 Make the change shown in the diff: add the `+` lines and remove the `-` lines.
 Lines starting with a space are context, so leave them as they are. Where you put the new
-lines inside the template doesn't affect rendering. The bot places them after
-`authority` to match the template documentation's order.
+lines inside the template doesn't affect rendering, as long as they're inside
+the infobox's own braces, not inside a nested template such as
+`{{Specieslist}}`, and each parameter appears only once. The bot puts them
+after the name and image lines and before `genus` or `taxon`, where the template
+documentation and most articles put them.
 
 ### 3. Check the citation
 
