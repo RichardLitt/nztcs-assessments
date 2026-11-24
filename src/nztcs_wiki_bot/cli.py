@@ -68,7 +68,7 @@ def main(argv: list[str] | None = None) -> int:
         f"Done. rows_in={buckets.rows_in} "
         f"matched={len(buckets.matched)} ambiguous={len(buckets.ambiguous)} "
         f"unmapped={len(buckets.unmapped)} no_match={len(buckets.no_match)} "
-        f"skipped={len(buckets.skipped)}",
+        f"skipped={len(buckets.skipped)} filtered={buckets.filtered}",
         flush=True,
     )
     print(f"Review queue written to {args.out}/", flush=True)

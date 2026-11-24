@@ -51,6 +51,13 @@ def test_stats_balanced(tmp_path):
     assert "rows_in    4" in stats
 
 
+def test_stats_balanced_counts_filtered_rows(tmp_path):
+    write_review(tmp_path, Buckets(rows_in=3, matched=[_entry("1")], filtered=2))
+    stats = (tmp_path / "stats.txt").read_text(encoding="utf-8")
+    assert "filtered   2" in stats
+    assert "balanced   True" in stats
+
+
 def test_tsv_files_written(tmp_path):
     b = Buckets(
         rows_in=2,
