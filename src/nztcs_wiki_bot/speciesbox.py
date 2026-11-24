@@ -172,18 +172,36 @@ def patch_status(
     return PatchResult(before=wikitext, after=after, action=action)
 
 
+def _name_attr(ref_name: str) -> str:
+    """Regex for ``name=X`` with X double-quoted, single-quoted or bare."""
+    n = re.escape(ref_name)
+    return rf"""name\s*=\s*(?:"{n}"|'{n}'|{n}(?=[\s/>]))"""
+
+
 def _ref_defined(wikitext: str, ref_name: str) -> bool:
-    """Whether a full ``<ref name="X">...</ref>`` already exists in the article."""
+    """Whether a full ``<ref name="X">...</ref>`` already exists in the article.
+
+    >>> _ref_defined('<ref name=Hoare2026>{{CiteQ|Q1}}</ref>', "Hoare2026")
+    True
+    >>> _ref_defined('<ref name="Hoare2026" />', "Hoare2026")
+    False
+    """
     pattern = re.compile(
-        r'<ref\s+name\s*=\s*"' + re.escape(ref_name) + r'"\s*>.*?</ref>',
-        re.DOTALL,
+        r"<ref\s+" + _name_attr(ref_name) + r"\s*>.*?</ref>",
+        re.DOTALL,  # ref names are case-sensitive
     )
     return bool(pattern.search(wikitext))
 
 
 def _ref_name_in(value: str | Wikicode, ref_name: str) -> bool:
-    """Whether a status_ref value already cites ``ref_name`` (full or self-closing)."""
-    return bool(re.search(r'name\s*=\s*"' + re.escape(ref_name) + r'"', str(value)))
+    """Whether a status_ref value already cites ``ref_name`` (full or self-closing).
+
+    >>> _ref_name_in("<ref name=Hoare2026 />", "Hoare2026")
+    True
+    >>> _ref_name_in('<ref name="Hoare20261" />', "Hoare2026")
+    False
+    """
+    return bool(re.search(_name_attr(ref_name), str(value)))
 
 
 def _update_primary(tmpl: Template, status_code: str, ref_value: str, ref_name: str) -> str:

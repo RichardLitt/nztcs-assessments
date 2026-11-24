@@ -56,13 +56,37 @@ If you see one:
 
 ## Citations for other reports
 
-The generated `status_ref` is built from the report's `reportName` and
-`reportYear` columns. For `Lepidoptera 2025 (Hoare et al. 2026)` that gives:
+The bot gives a complete citation, `{{CiteQ|<item>}}`, only for reports listed
+in `KNOWN_REPORTS` in
+[`src/nztcs_wiki_bot/reports.py`](../src/nztcs_wiki_bot/reports.py). For
+anything else it falls back to a `{{cite report}}` scaffold with a TODO marker
+that every reviewer has to fill in by hand. Adding the report takes a few
+minutes and saves that work on every article:
 
-- ref name `NZTCS-Lepidoptera-2025`
-- title *Conservation status of New Zealand Lepidoptera, 2025*
-- date `2026`
+1. **Find the report's Wikidata item.** Search [Wikidata](https://www.wikidata.org)
+   for the report's title or its PDF link. Check that the item has the authors,
+   date, series and full-text URL. If there's no item, you can create one on
+   Wikidata ([WikiProject Source Metadata](https://www.wikidata.org/wiki/Wikidata:WikiProject_Source_Metadata)
+   lists the usual properties), or skip this section and use the scaffold.
+2. **Find the ref name articles already use.** Search Wikipedia for
+   `insource:"Q<item>"`. If articles already cite it, use their ref name. For
+   Lepidoptera 2025 that's `Hoare2026`. Otherwise, use first author's surname
+   plus year.
+3. **Add an entry** to `KNOWN_REPORTS`, keyed by the report's `reportName`
+   exactly as it appears in the CSV:
 
-This title is generated, so it may not match the published report's official
-title word for word. Check it against the report while you fill in the authors. See
-[reviewing-output.md](reviewing-output.md#3-complete-the-citation).
+   ```python
+   "Lepidoptera 2025 (Hoare et al. 2026)": Report(
+       wikidata="Q139379012",
+       ref_name="Hoare2026",
+       url="https://www.doc.govt.nz/globalassets/documents/science-and-technical/nztcs51.pdf",
+   ),
+   ```
+
+4. Run `pytest` and open a pull request.
+
+Without an entry, the scaffold is built from the `reportName` and `reportYear`
+columns, for example ref name `NZTCS-Birds-2021` and title *Conservation status
+of New Zealand Birds, 2021*. That title is generated, so it may not match the
+published report's title word for word. See
+[reviewing-output.md](reviewing-output.md#other-reports-complete-the-scaffold).

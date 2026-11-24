@@ -114,3 +114,59 @@ def test_patch_noop_when_no_infobox():
     )
     assert result.action == "noop"
     assert not result.changed
+
+
+# -- patch_status with real citations (citation.build_ref) -------------------
+
+from nztcs_wiki_bot import citation  # noqa: E402
+from nztcs_wiki_bot.csv_loader import Row  # noqa: E402
+
+_LEP = Row.from_dict({"reportName": "Lepidoptera 2025 (Hoare et al. 2026)", "reportYear": "2026"})
+
+
+def _article(params: str, body: str) -> str:
+    return (
+        "{{Speciesbox\n| genus = Arctesthes\n| species = avatar\n| authority = Patrick, 2023\n"
+        f"{params}}}}}\n{body}\n==References==\n{{{{Reflist}}}}\n"
+    )
+
+
+def _patch_with_citation(wt: str, code: str = "NC") -> sb.PatchResult:
+    name, ref = citation.build_ref(_LEP, wt)
+    return sb.patch_status(wt, "Arctesthes", "avatar", code, name, ref)
+
+
+def test_insert_uses_citeq_for_known_report():
+    result = _patch_with_citation(_article("", "A moth."))
+    assert result.action == "insert"
+    assert '| status_ref = <ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>' in result.after
+
+
+def test_already_cited_status_is_noop():
+    # The shape 16 existing articles use: short ref in the infobox, CiteQ in the body.
+    wt = _article(
+        '| status = NC\n| status_system = NZTCS\n| status_ref = <ref name="Hoare2026" />\n',
+        'A moth.<ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>',
+    )
+    result = _patch_with_citation(wt, "NC")
+    assert result.action == "noop"
+    assert not result.changed
+
+
+def test_insert_reuses_existing_ref_under_another_name():
+    wt = _article("", "A moth.<ref name=Patrick2023>{{CiteQ|Q139379012|pages=32}}</ref>")
+    result = _patch_with_citation(wt)
+    assert result.action == "insert"
+    assert '| status_ref = <ref name="Patrick2023" />' in result.after
+    assert result.after.count("Q139379012") == 1
+
+
+def test_bare_ref_name_counts_as_defined():
+    wt = _article("", "A moth.<ref name=Hoare2026>{{CiteQ|Q139379012}}</ref>")
+    result = _patch_with_citation(wt)
+    assert '| status_ref = <ref name="Hoare2026" />' in result.after
+
+
+def test_ref_names_are_case_sensitive():
+    assert not sb._ref_defined('<ref name="hoare2026">x</ref>', "Hoare2026")
+    assert not sb._ref_name_in('<ref name="hoare2026" />', "Hoare2026")

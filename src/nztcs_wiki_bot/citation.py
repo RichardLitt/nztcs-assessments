@@ -1,22 +1,37 @@
-"""Build a ``{{cite report}}`` scaffold ref for an NZTCS patch.
+"""Build the ``status_ref`` citation for an NZTCS patch.
 
-The CSV does not carry the full author list, so the generated citation is a
-*scaffold*: it pre-fills what we know (title, year, publisher, series) and marks
-the author field with an HTML comment so the human reviewer completes it before
-saving. The scaffold marker is intentionally visible in every diff.
+For a report listed in :mod:`nztcs_wiki_bot.reports`, the citation is
+``{{CiteQ|<Wikidata item>}}`` under the ref name articles already use for that
+report. If the article already cites the report under some other name (found
+by its Wikidata ID or full-text URL), that name is reused instead, so the
+article ends up with one citation, not two.
+
+For any other report, the CSV doesn't carry enough to cite it (no authors or
+series number), so the citation is a ``{{cite report}}`` *scaffold*: it fills
+in what's known and marks the author field with a visible HTML comment that the
+reviewer must complete before saving.
 """
 
 from __future__ import annotations
 
 import re
 
+from . import reports
 from .csv_loader import Row
 
 TODO_AUTHORS = "<!-- TODO: complete author list and series number before saving -->"
 
+# A named ref with a body. The name may be double-quoted, single-quoted or bare.
+_NAMED_REF = re.compile(
+    r"<ref\s+name\s*=\s*"
+    r"(?:\"(?P<dq>[^\"]+)\"|'(?P<sq>[^']+)'|(?P<bare>[^\s\"'/>]+))"
+    r"\s*>(?P<body>.*?)</ref>",
+    re.DOTALL | re.IGNORECASE,
+)
+
 
 def ref_name(report_name: str) -> str:
-    """Derive a deterministic, slug-safe ``<ref name="...">`` from a report name.
+    """Derive a deterministic, slug-safe ``<ref name="...">`` for a scaffold.
 
     >>> ref_name("Lepidoptera 2025 (Hoare et al. 2026)")
     'NZTCS-Lepidoptera-2025'
@@ -27,22 +42,51 @@ def ref_name(report_name: str) -> str:
     return f"NZTCS-{slug}" if slug else "NZTCS"
 
 
-def build_ref(row: Row) -> tuple[str, str]:
+def build_ref(row: Row, wikitext: str = "") -> tuple[str, str]:
     """Return ``(ref_name, full_ref_wikitext)`` for a CSV row.
 
-    The full ref is a complete ``<ref name="...">...</ref>`` element ready to drop
-    into a Speciesbox ``status_ref`` parameter.
+    ``wikitext`` is the article's current source, used to reuse an existing
+    citation of the same report. The full ref is a complete
+    ``<ref name="...">...</ref>`` element ready to drop into a Speciesbox
+    ``status_ref`` parameter.
 
     >>> from nztcs_wiki_bot.csv_loader import Row
     >>> r = Row.from_dict(
     ...     {"reportName": "Lepidoptera 2025 (Hoare et al. 2026)", "reportYear": "2026"}
     ... )
-    >>> name, ref = build_ref(r)
-    >>> name
-    'NZTCS-Lepidoptera-2025'
-    >>> "cite report" in ref and TODO_AUTHORS in ref
+    >>> build_ref(r)
+    ('Hoare2026', '<ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>')
+    >>> build_ref(r, '<ref name=moths>{{CiteQ|Q139379012|pages=32}}</ref>')[0]
+    'moths'
+    """
+    report = reports.lookup(row.report_name)
+    if report is None:
+        return _scaffold(row)
+    name = existing_ref_name(wikitext, report) or report.ref_name
+    return name, f'<ref name="{name}">{{{{CiteQ|{report.wikidata}}}}}</ref>'
+
+
+def existing_ref_name(wikitext: str, report: reports.Report) -> str | None:
+    """Name of a ref in ``wikitext`` that already cites ``report``, if any.
+
+    Matches on the report's Wikidata ID or full-text URL. Unnamed refs can't be
+    reused, so they're ignored.
+
+    >>> rep = reports.lookup("Lepidoptera 2025 (Hoare et al. 2026)")
+    >>> existing_ref_name('<ref name="H26">{{CiteQ|Q139379012}}</ref>', rep)
+    'H26'
+    >>> existing_ref_name('<ref name="other">{{CiteQ|Q1393790123}}</ref>', rep) is None
     True
     """
+    qid = re.compile(r"\b" + re.escape(report.wikidata) + r"\b")
+    for m in _NAMED_REF.finditer(wikitext):
+        body = m.group("body")
+        if qid.search(body) or report.url in body:
+            return m.group("dq") or m.group("sq") or m.group("bare")
+    return None
+
+
+def _scaffold(row: Row) -> tuple[str, str]:
     name = ref_name(row.report_name)
     title = _report_title(row.report_name)
     year = row.report_year or _year_from_name(row.report_name)

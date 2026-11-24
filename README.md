@@ -94,13 +94,15 @@ Each entry in `matched.md` looks like this:
  | authority = ([[Edward Doubleday|Doubleday]], 1843)
 +| status = NT
 +| status_system = NZTCS
-+| status_ref = <ref name="NZTCS-Lepidoptera-2025">{{cite report ...}}</ref>
++| status_ref = <ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>
  }}
 ```
 ````
 
 To apply one, open the article, click **Edit source**, add the `+` lines to the
-infobox, **fill in the citation's TODO marker**, preview, and save. The full
+infobox, preview, and save. For reports the bot knows, the citation is complete:
+`{{CiteQ}}` builds it from the report's Wikidata item. For any other report it's
+a scaffold with a TODO marker you fill in before saving. The full
 walkthrough is in [docs/reviewing-output.md](docs/reviewing-output.md). You are
 the editor of record, not the bot.
 
