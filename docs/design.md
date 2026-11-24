@@ -58,7 +58,8 @@ src/nztcs_wiki_bot/
 ├── status_map.py    status title → Speciesbox code, or why there isn't one
 ├── wiki_client.py   the only module that talks to Wikipedia
 ├── speciesbox.py    find / verify / patch the infobox (mwparserfromhell)
-├── citation.py      {{cite report}} scaffold from reportName / reportYear
+├── reports.py       known reports → Wikidata item and shared ref name
+├── citation.py      status_ref: {{CiteQ}} for known reports, else a scaffold
 ├── pipeline.py      orchestration; no I/O of its own
 └── output.py        Buckets → review/ files (deterministic ordering)
 ```
@@ -128,13 +129,24 @@ genera (`"Acroclita" discariana`) mark an uncertain generic placement that no
 article title will use. Both are skipped before any request is made and listed
 in `skipped.tsv` with a reason.
 
-### Citation is a scaffold
+### Citations come from Wikidata where possible
 
-The CSV has the report name and year but not the authors or series number. The
-generated `{{cite report}}` fills in what's known and puts a visible
-`<!-- TODO … -->` in `author`, so the reviewer has to complete it. The ref name
-(`NZTCS-<taxon>-<year>`) is deterministic, so every species from one report
-shares one reference.
+The CSV has the report name and year but not the authors or series number, so
+it can't produce a full citation by itself.
+
+For reports listed in `reports.py`, the citation is `{{CiteQ|<item>}}`, which
+renders the full reference from the report's Wikidata item. That's how existing
+articles already cite these reports, under a shared ref name such as
+`Hoare2026`. The bot uses the same name, so its citation joins theirs. If the
+article already cites the report under a different name (matched by Wikidata ID
+or full-text URL in a named ref), the bot reuses that name and emits only
+`<ref name="..." />`. Ref names are matched case-sensitively, whether they're
+quoted or bare, as MediaWiki does.
+
+For any other report, the bot falls back to a `{{cite report}}` scaffold: it
+fills in what's known and puts a visible `<!-- TODO … -->` in `author`, so the
+reviewer has to complete it. The scaffold's ref name (`NZTCS-<taxon>-<year>`) is
+deterministic, so every species from one report shares one reference.
 
 ### Contact belongs to the operator
 

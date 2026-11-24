@@ -106,7 +106,7 @@ def run(rows: list[Row], client: WikiReader, config: PipelineConfig | None = Non
             )
             continue
 
-        ref_name, ref_wikitext = citation.build_ref(row)
+        ref_name, ref_wikitext = citation.build_ref(row, wikitext)
         patch = speciesbox.patch_status(
             wikitext, clean.genus or "", clean.species or "", code, ref_name, ref_wikitext
         )

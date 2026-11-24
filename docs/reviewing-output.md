@@ -41,10 +41,29 @@ Lines starting with a space are context, so leave them as they are. Where you pu
 lines inside the template doesn't affect rendering. The bot places them after
 `authority` to match the template documentation's order.
 
-### 3. Complete the citation
+### 3. Check the citation
 
-The generated `status_ref` is a **scaffold**. The NZTCS CSV doesn't include the
-author list or series number, so the reference contains a visible marker:
+For reports the bot knows (listed in
+[`src/nztcs_wiki_bot/reports.py`](../src/nztcs_wiki_bot/reports.py)), the
+citation is already complete:
+
+```
+<ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>
+```
+
+`{{CiteQ}}` builds the full reference (authors, title, series, number, link)
+from the report's Wikidata item, the same way other articles cite it. There's
+nothing to fill in. In the preview, check that the reference renders with
+authors and a title.
+
+If the article already cites the report, the bot reuses that citation's name
+and emits only `<ref name="..." />`. Again, there's nothing to complete.
+
+#### Other reports: complete the scaffold
+
+For a report not in that list, the generated `status_ref` is a **scaffold**. The
+NZTCS CSV doesn't include the author list or series number, so the reference
+contains a visible marker:
 
 ```
 | author = <!-- TODO: complete author list and series number before saving -->
@@ -59,11 +78,9 @@ the series number to `series`. The result has this shape:
 | series = New Zealand Threat Classification Series <number>
 ```
 
-Never save with the TODO marker still in place.
-
-If the article already has a reference with the same name (for example
-`<ref name="NZTCS-Lepidoptera-2025">` from an earlier edit), the bot emits the
-short `<ref name="..." />` form instead. There's nothing to complete in that case.
+Never save with the TODO marker still in place. Better still, add the report to
+`reports.py` (see [adding-a-report.md](adding-a-report.md#citations-for-other-reports))
+and re-run, so every article gets a complete citation.
 
 ### 4. Preview
 
