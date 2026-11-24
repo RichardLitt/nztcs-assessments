@@ -69,16 +69,19 @@ minutes and saves that work on every article:
    Wikidata ([WikiProject Source Metadata](https://www.wikidata.org/wiki/Wikidata:WikiProject_Source_Metadata)
    lists the usual properties), or skip this section and use the scaffold.
 2. **Find the ref name articles already use.** Search Wikipedia for
-   `insource:"Q<item>"`. If articles already cite it, use their ref name. For
-   Lepidoptera 2025 that's `Hoare2026`. Otherwise, use first author's surname
-   plus year.
+   `insource:"Q<item>"`. If articles already cite it, use the name most of them
+   use. For Lepidoptera 2025 that's `NZTCS2025` (81 articles in November 2026,
+   against 16 for `Hoare2026` and 5 for `Hoare2025`). Otherwise, use
+   `NZTCS<assessment year>`. The bot reuses whatever name an individual article
+   already has, so this name only matters for articles that don't cite the
+   report yet.
 3. **Add an entry** to `KNOWN_REPORTS`, keyed by the report's `reportName`
    exactly as it appears in the CSV:
 
    ```python
    "Lepidoptera 2025 (Hoare et al. 2026)": Report(
        wikidata="Q139379012",
-       ref_name="Hoare2026",
+       ref_name="NZTCS2025",
        url="https://www.doc.govt.nz/globalassets/documents/science-and-technical/nztcs51.pdf",
    ),
    ```

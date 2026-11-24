@@ -48,7 +48,7 @@ For reports the bot knows (listed in
 citation is already complete:
 
 ```
-<ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>
+<ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
 ```
 
 `{{CiteQ}}` builds the full reference (authors, title, series, number, link)

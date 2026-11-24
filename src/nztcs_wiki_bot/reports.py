@@ -31,7 +31,7 @@ KNOWN_REPORTS: dict[str, Report] = {
     # Hoare, Edwards, Knox, Frost & Michel 2026. NZ Threat Classification Series 51.
     "Lepidoptera 2025 (Hoare et al. 2026)": Report(
         wikidata="Q139379012",
-        ref_name="Hoare2026",
+        ref_name="NZTCS2025",
         url="https://www.doc.govt.nz/globalassets/documents/science-and-technical/nztcs51.pdf",
     ),
 }

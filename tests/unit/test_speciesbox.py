@@ -139,7 +139,7 @@ def _patch_with_citation(wt: str, code: str = "NC") -> sb.PatchResult:
 def test_insert_uses_citeq_for_known_report():
     result = _patch_with_citation(_article("", "A moth."))
     assert result.action == "insert"
-    assert '| status_ref = <ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>' in result.after
+    assert '| status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>' in result.after
 
 
 def test_already_cited_status_is_noop():

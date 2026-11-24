@@ -136,8 +136,9 @@ it can't produce a full citation by itself.
 
 For reports listed in `reports.py`, the citation is `{{CiteQ|<item>}}`, which
 renders the full reference from the report's Wikidata item. That's how existing
-articles already cite these reports, under a shared ref name such as
-`Hoare2026`. The bot uses the same name, so its citation joins theirs. If the
+articles already cite these reports. The default ref name is the one most of
+those articles use (`NZTCS2025` for Lepidoptera 2025), so the bot's citations
+look like theirs. If the
 article already cites the report under a different name (matched by Wikidata ID
 or full-text URL in a named ref), the bot reuses that name and emits only
 `<ref name="..." />`. Ref names are matched case-sensitively, whether they're
