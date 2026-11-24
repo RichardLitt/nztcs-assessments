@@ -23,6 +23,11 @@ All notable changes to this project are documented here. The format follows
   there, folded under **Full diff**. `matched.jsonl` gains the same
   information as `edits`.
 
+- `apply` shows any sentence in the article text that describes an NZTCS
+  status (it mentions the NZTCS or the Department of Conservation and a status
+  name), and warns if it doesn't name the new status. The infobox patch never
+  changes prose, so the text would otherwise contradict the infobox.
+
 ### Changed
 
 - Citations for known reports are now complete: `status_ref` is
