@@ -39,6 +39,10 @@ All notable changes to this project are documented here. The format follows
   That matches the Speciesbox documentation and most articles. New `status2`
   lines go straight after the existing status block instead of at the end of
   the infobox.
+- `apply` edit summaries link to a page explaining the tool,
+  `User:<account>/nztcs-wiki-bot` by default (`--tool-page` to change it), once
+  that page exists. Until then, `apply` reminds you to create it, and there's a
+  draft in `docs/assisted-editing.md`.
 
 ### Fixed
 

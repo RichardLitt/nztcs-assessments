@@ -50,6 +50,9 @@ from .wiki_client import CONTACT_ENV_VAR, MissingContactError, resolve_contact
 
 DEFAULT_INTERVAL = 10.0  # seconds between saves
 TOOL_NOTE = "assisted edit with nztcs-wiki-bot"
+# A page on the operator's account explaining the tool. Edit summaries link to
+# it once it exists (see docs/assisted-editing.md).
+TOOL_PAGE = "User:{account}/nztcs-wiki-bot"
 
 _LABELS = {code: title for title, code in status_map.STATUS_CODES.items()}
 
@@ -87,7 +90,18 @@ def load_entries(path: Path) -> list[Entry]:
     return entries
 
 
-def edit_summary(entry: Entry) -> str:
+def tool_note(tool_page: str | None) -> str:
+    """The end of every edit summary: a link to the tool page, if there is one.
+
+    >>> tool_note("User:Richlitt/nztcs-wiki-bot")
+    'assisted edit with [[User:Richlitt/nztcs-wiki-bot|nztcs-wiki-bot]]'
+    >>> tool_note(None)
+    'assisted edit with nztcs-wiki-bot'
+    """
+    return f"assisted edit with [[{tool_page}|nztcs-wiki-bot]]" if tool_page else TOOL_NOTE
+
+
+def edit_summary(entry: Entry, note: str = TOOL_NOTE) -> str:
     """The edit summary for an entry.
 
     >>> e = Entry("1", "A b", "A b", "NT", "insert", "", "", "")
@@ -102,7 +116,7 @@ def edit_summary(entry: Entry) -> str:
         what = f"Add NZTCS conservation status alongside existing status: {status}"
     else:
         what = f"Add NZTCS conservation status: {status}"
-    return f"{what}; {TOOL_NOTE}"
+    return f"{what}; {note}"
 
 
 def _article_url(title: str) -> str:
@@ -165,8 +179,10 @@ class Applier:
         sleep: Callable[[float], None] | None = None,
         open_url: Callable[[str], object] | None = None,
         color: bool | None = None,
+        note: str = TOOL_NOTE,
     ) -> None:
         self.color = _use_color() if color is None else color
+        self.note = note
         self.editor = editor
         self.log_path = log_path
         self.ask = ask
@@ -238,7 +254,7 @@ class Applier:
                 self.say(f"(waiting {wait:.0f}s between saves)")
                 self.sleep(wait)
         try:
-            revid = self.editor.save(page, entry.after, edit_summary(entry))
+            revid = self.editor.save(page, entry.after, edit_summary(entry, self.note))
         except EditError as e:
             self.say(f"  Not saved: {e}")
             self._record(entry, f"error:{e.code}")
@@ -298,6 +314,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--species", default=None, help="Only entries whose binomial contains this")
     p.add_argument("--limit", type=int, default=None, help="Look at most N entries")
+    p.add_argument(
+        "--tool-page",
+        default=None,
+        help="Page explaining the tool, linked from edit summaries once it exists "
+        "(default: User:<your account>/nztcs-wiki-bot)",
+    )
     return p
 
 
@@ -347,7 +369,17 @@ def main(
         f"responsible for each one.\n{len(entries)} entries to look at; nothing is saved "
         "unless you answer y."
     )
-    applier = Applier(editor, review / "applied.tsv", ask=ask, interval=args.interval)
+    tool_page = args.tool_page or TOOL_PAGE.format(account=account)
+    if editor.get_page(tool_page).missing:
+        print(
+            f"\nTip: create the page [[{tool_page}]] explaining what this tool does "
+            "(there's a draft in docs/assisted-editing.md). Edit summaries will link to "
+            "it once it exists. For now they say 'assisted edit with nztcs-wiki-bot'."
+        )
+        tool_page = None
+    applier = Applier(
+        editor, review / "applied.tsv", ask=ask, interval=args.interval, note=tool_note(tool_page)
+    )
     outcomes = applier.run(entries)
     summary = ", ".join(f"{k} {v}" for k, v in sorted(outcomes.items())) or "nothing done"
     print(f"\nDone: {summary}. Log: {review / 'applied.tsv'}")
