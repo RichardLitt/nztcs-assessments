@@ -55,6 +55,84 @@ def unified_diff(before: str, after: str, title: str) -> str:
     return "".join(diff)
 
 
+@dataclass
+class PlainEdit:
+    """One change, as plain lines a reviewer can copy without diff markers.
+
+    ``op`` is ``insert``, ``replace`` or ``delete``. For an insert, ``above``
+    is the existing line the new lines go directly above (or ``below`` the
+    line they follow, when there's nothing after them).
+    """
+
+    op: str
+    remove: list[str]
+    add: list[str]
+    above: str | None = None
+    below: str | None = None
+
+
+def plain_edits(before: str, after: str) -> list[PlainEdit]:
+    """Turn a before/after pair into copy-ready edits, one per changed run.
+
+    >>> e = plain_edits("{{Box\\n| genus = A\\n}}", "{{Box\\n| status = NT\\n| genus = A\\n}}")
+    >>> e[0].op, e[0].add, e[0].above
+    ('insert', ['| status = NT'], '| genus = A')
+    >>> e = plain_edits("| status = NC\\n| x = 1", "| status = NE\\n| x = 1")
+    >>> e[0].op, e[0].remove, e[0].add
+    ('replace', ['| status = NC'], ['| status = NE'])
+    """
+    a, b = before.splitlines(), after.splitlines()
+    edits = []
+    matcher = difflib.SequenceMatcher(a=a, b=b, autojunk=False)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            continue
+        if tag == "insert":
+            above = a[i1] if i1 < len(a) else None
+            # "Above }}" or "above a blank line" doesn't say where; an article has
+            # many of those. Point at the line before instead.
+            if above is not None and _is_vague(above) and i1 > 0:
+                above = None
+            below = a[i1 - 1] if above is None and i1 > 0 else None
+            edits.append(PlainEdit("insert", [], b[j1:j2], above=above, below=below))
+        else:
+            edits.append(PlainEdit(tag, a[i1:i2], b[j1:j2]))
+    return edits
+
+
+def _is_vague(line: str) -> bool:
+    """Whether a line is too generic to say where an insertion goes."""
+    text = line.strip()
+    return text == "" or text.startswith("}}")
+
+
+def _code(line: str, limit: int = 80) -> str:
+    """An existing line, shortened, as inline code for 'directly above …'."""
+    text = line.strip()
+    if len(text) > limit:
+        text = text[: limit - 1] + "…"
+    return "`` " + text + " ``" if "`" in text else f"`{text}`"
+
+
+def _block(lines: list[str]) -> list[str]:
+    return ["```wikitext", *lines, "```"]
+
+
+def _render_edit(edit: PlainEdit) -> list[str]:
+    n = "this line" if max(len(edit.remove), len(edit.add)) == 1 else "these lines"
+    if edit.op == "insert":
+        if edit.above is not None:
+            where = f"directly above {_code(edit.above)}"
+        elif edit.below is not None:
+            where = f"directly below {_code(edit.below)}"
+        else:
+            where = "into the article"
+        return [f"**Add** {n} {where}:", "", *_block(edit.add)]
+    if edit.op == "delete":
+        return [f"**Remove** {n}:", "", *_block(edit.remove)]
+    return [f"**Replace** {n}:", "", *_block(edit.remove), "", "**with:**", "", *_block(edit.add)]
+
+
 def _anchor(species_id: str) -> str:
     return f"speciesId-{species_id}"
 
@@ -76,12 +154,14 @@ def _write_matched(out: Path, entries: list[MatchEntry]) -> None:
     entries = sorted(entries, key=lambda e: e.species_id)
     with (out / "matched.jsonl").open("w", encoding="utf-8") as f:
         for e in entries:
-            f.write(json.dumps(asdict(e), ensure_ascii=False, sort_keys=True) + "\n")
+            record = asdict(e)
+            record["edits"] = [asdict(x) for x in plain_edits(e.before, e.after)]
+            f.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
 
     lines = ["# Matched — proposed NZTCS patches", ""]
     lines.append(
-        f"_{len(entries)} confident matches. "
-        "Review each diff against the live article before pasting._"
+        f"_{len(entries)} confident matches. Each entry gives the lines to copy into "
+        "the article as they are, with the full diff underneath for checking._"
     )
     lines.append("")
     for e in entries:
@@ -93,9 +173,17 @@ def _write_matched(out: Path, entries: list[MatchEntry]) -> None:
         lines.append(f"- **NZTCS status:** `{e.status_code}`")
         lines.append(f"- **Patch action:** {e.action}")
         lines.append("")
+        for edit in plain_edits(e.before, e.after):
+            lines.extend(_render_edit(edit))
+            lines.append("")
+        lines.append("<details>")
+        lines.append("<summary>Full diff</summary>")
+        lines.append("")
         lines.append("```diff")
         lines.append(e.diff.rstrip("\n"))
         lines.append("```")
+        lines.append("")
+        lines.append("</details>")
         lines.append("")
     (out / "matched.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

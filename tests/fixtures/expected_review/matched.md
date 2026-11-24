@@ -1,6 +1,6 @@
 # Matched — proposed NZTCS patches
 
-_2 confident matches. Review each diff against the live article before pasting._
+_2 confident matches. Each entry gives the lines to copy into the article as they are, with the full diff underneath for checking._
 
 <a id="speciesId-1"></a>
 ## Aenetus virescens → [Pūriri moth](https://en.wikipedia.org/wiki/Pūriri_moth)
@@ -8,6 +8,17 @@ _2 confident matches. Review each diff against the live article before pasting._
 - **Common name:** pūriri moth
 - **NZTCS status:** `NV`
 - **Patch action:** insert
+
+**Add** these lines directly above `| genus = Aenetus`:
+
+```wikitext
+| status = NV
+| status_system = NZTCS
+| status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
+```
+
+<details>
+<summary>Full diff</summary>
 
 ```diff
 --- Pūriri moth (current)
@@ -24,12 +35,41 @@ _2 confident matches. Review each diff against the live article before pasting._
  | authority = ([[Edward Doubleday|Doubleday]], 1843)
 ```
 
+</details>
+
 <a id="speciesId-2"></a>
 ## Powelliphanta augusta → [Powelliphanta augusta](https://en.wikipedia.org/wiki/Powelliphanta_augusta)
 
 - **Common name:** —
 - **NZTCS status:** `NE`
 - **Patch action:** update
+
+**Replace** this line:
+
+```wikitext
+| status = NC
+```
+
+**with:**
+
+```wikitext
+| status = NE
+```
+
+**Replace** this line:
+
+```wikitext
+| status_ref = <ref name="oldref">{{cite report |title=old}}</ref>
+```
+
+**with:**
+
+```wikitext
+| status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
+```
+
+<details>
+<summary>Full diff</summary>
 
 ```diff
 --- Powelliphanta augusta (current)
@@ -47,4 +87,6 @@ _2 confident matches. Review each diff against the live article before pasting._
  '''''Powelliphanta augusta''''' is a species of large land snail.
  
 ```
+
+</details>
 

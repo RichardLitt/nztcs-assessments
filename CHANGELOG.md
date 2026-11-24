@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Each `matched.md` entry now gives the lines to paste as plain wikitext, with
+  no `+`/`-` markers, and says where they go ("Add these lines directly above
+  `| genus = …`", or "Replace this line … with: …"). The full diff is still
+  there, folded under **Full diff**. `matched.jsonl` gains the same
+  information as `edits`.
+
 ### Changed
 
 - Citations for known reports are now complete: `status_ref` is
