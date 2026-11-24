@@ -140,7 +140,7 @@ The patch only changes the infobox. Many articles also say something like
 Vulnerable" in the text, which would then contradict a new infobox status.
 
 When the article text has a sentence that mentions the NZTCS (or the
-Department of Conservation) and a status name, `apply` shows it under the
+Department of Conservation) and a status name, `apply` shows it above the
 infobox:
 
 ```

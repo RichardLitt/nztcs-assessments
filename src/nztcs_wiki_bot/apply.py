@@ -110,48 +110,6 @@ def _article_url(title: str) -> str:
     return "https://en.wikipedia.org/wiki/" + quote(title.replace(" ", "_"))
 
 
-_GREEN, _RED, _RESET = "\033[32m", "\033[31m", "\033[0m"
-
-
-def infobox_view(entry: Entry, color: bool = False) -> str:
-    """The whole infobox as it will be after the edit, every line shown.
-
-    Added lines start with ``+``, removed lines with ``-``, and unchanged lines
-    are indented, so existing ``status`` lines are visible at a glance. Falls
-    back to the full diff if either version has no infobox.
-
-    >>> before = "{{Speciesbox\\n| genus = A\\n}}"
-    >>> after = "{{Speciesbox\\n| status = NT\\n| genus = A\\n}}"
-    >>> e = Entry("1", "A b", "A b", "NT", "insert", before, after, "")
-    >>> print(infobox_view(e))
-        {{Speciesbox
-      + | status = NT
-        | genus = A
-        }}
-    """
-    before, after = find_infobox(entry.before), find_infobox(entry.after)
-    if before is None or after is None:
-        return entry.diff
-    a = str(before.template).splitlines()
-    b = str(after.template).splitlines()
-
-    def paint(text: str, code: str) -> str:
-        return f"{code}{text}{_RESET}" if color else text
-
-    out = []
-    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=a, b=b, autojunk=False).get_opcodes():
-        if tag == "equal":
-            out += [f"    {line}" for line in a[i1:i2]]
-            continue
-        out += [paint(f"  - {line}", _RED) for line in a[i1:i2]]
-        out += [paint(f"  + {line}", _GREEN) for line in b[j1:j2]]
-    return "\n".join(out)
-
-
-def _use_color() -> bool:
-    return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
-
-
 # Status names that might appear in an article's prose: every NZTCS title the
 # tool knows, plus the group names and older (2002/2008) categories.
 _STATUS_NAMES = sorted(
@@ -212,6 +170,49 @@ def mentions_status(sentence: str, code: str) -> bool:
     """
     label = _LABELS.get(code, code)
     return label.lower() in sentence.lower()
+
+
+_GREEN, _RED, _RESET = "\033[32m", "\033[31m", "\033[0m"
+
+
+def infobox_view(entry: Entry, color: bool = False) -> str:
+    """The whole infobox as it will be after the edit, every line shown.
+
+    Added lines start with ``+``, removed lines with ``-``, and unchanged lines
+    are indented, so existing ``status`` lines are visible at a glance. Falls
+    back to the full diff if either version has no infobox.
+
+    >>> before = "{{Speciesbox\\n| genus = A\\n}}"
+    >>> after = "{{Speciesbox\\n| status = NT\\n| genus = A\\n}}"
+    >>> e = Entry("1", "A b", "A b", "NT", "insert", before, after, "")
+    >>> print(infobox_view(e))
+        {{Speciesbox
+      + | status = NT
+        | genus = A
+        }}
+    """
+    before, after = find_infobox(entry.before), find_infobox(entry.after)
+    if before is None or after is None:
+        return entry.diff
+    a = str(before.template).splitlines()
+    b = str(after.template).splitlines()
+
+    def paint(text: str, code: str) -> str:
+        return f"{code}{text}{_RESET}" if color else text
+
+    out = []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=a, b=b, autojunk=False).get_opcodes():
+        if tag == "equal":
+            out += [f"    {line}" for line in a[i1:i2]]
+            continue
+        out += [paint(f"  - {line}", _RED) for line in a[i1:i2]]
+        out += [paint(f"  + {line}", _GREEN) for line in b[j1:j2]]
+    return "\n".join(out)
+
+
+def _use_color() -> bool:
+    return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
+
 
 
 class Applier:
@@ -278,9 +279,9 @@ class Applier:
         self.say(_article_url(entry.title))
         label = _LABELS.get(entry.status_code, entry.status_code)
         self.say(f"NZTCS status: {entry.status_code} ({label}) · {entry.action}\n")
+        self._warn_about_prose(entry)
         self.say("Infobox after this edit (+ added, - removed):\n")
         self.say(infobox_view(entry, self.color))
-        self._warn_about_prose(entry)
         while True:
             answer = self.ask("\nSave this edit? [y]es [n]o [d]iff [o]pen [q]uit: ").strip().lower()
             if answer in ("d", "diff"):
@@ -300,7 +301,7 @@ class Applier:
         if not sentences:
             return
         label = _LABELS.get(entry.status_code, entry.status_code)
-        self.say("\nThe article text also describes a conservation status:")
+        self.say("The article text also describes a conservation status:")
         for sentence in sentences:
             self.say(f'  "{sentence}"')
         if all(mentions_status(s, entry.status_code) for s in sentences):
@@ -311,6 +312,7 @@ class Applier:
                 "changes the infobox, so open the article (o) and update the text yourself "
                 "if needed."
             )
+        self.say("")
 
     def _save(self, entry: Entry, page) -> str:
         if self._last_save is not None:
