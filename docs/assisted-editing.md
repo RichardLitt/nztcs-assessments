@@ -53,6 +53,7 @@ Useful options:
 | `--species TEXT` | Only entries whose name contains `TEXT`, e.g. `--species Ichneutica`. |
 | `--limit N` | Look at the first `N` entries only. Good for a first try. |
 | `--interval SECONDS` | Minimum gap between saves (default 10, minimum 5). |
+| `--show-skipped` | Also show entries you skipped in earlier sessions (see below). |
 | `--review DIR` | A review folder other than `review/`. |
 
 ## What you see for each entry
@@ -91,7 +92,7 @@ update, the old line is shown with `-` and the new one with `+`. Set
 | Key | Does |
 |---|---|
 | `y` | Save the edit. |
-| `n` | Skip this one. |
+| `n` | Skip this one. It won't be shown again in later sessions. |
 | `d` | Show the full diff, then ask again. |
 | `o` | Open the article in your browser, then ask again. |
 | `q` | Stop. You can start again later; finished entries are skipped. |
@@ -170,6 +171,18 @@ Every outcome is appended to `review/applied.tsv`: time, species ID, article,
 outcome (`saved`, `skipped`, `changed`, `error:<code>`, …) and the new revision
 ID for saves. To see a saved edit, open
 `https://en.wikipedia.org/w/index.php?diff=<revid>`.
+
+### Skips are remembered
+
+When you answer `n`, that's recorded in the log, and later sessions leave the
+entry out. They print "Not showing N entries you skipped before" instead. Your
+skips survive re-running the tool and deleting `cache/`, because the review run
+never touches `applied.tsv`.
+
+To see skipped entries again, run `apply --show-skipped`. If you save one then,
+the save wins and it's never hidden again. To forget every skip, along with the
+rest of the log, delete `review/applied.tsv`. Quitting with `q`, or an entry
+being skipped automatically (for example `changed`), doesn't count as a skip.
 
 ## When the article text also gives a status
 
