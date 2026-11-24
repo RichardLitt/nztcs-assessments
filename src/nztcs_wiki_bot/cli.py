@@ -1,7 +1,8 @@
 """Command-line entrypoint: ``nztcs-wiki-bot`` / ``python -m nztcs_wiki_bot``.
 
-``nztcs-wiki-bot fetch ...`` downloads a report (see :mod:`.fetch`); any other
-invocation runs the review-queue pipeline.
+``nztcs-wiki-bot fetch ...`` downloads a report (see :mod:`.fetch`),
+``nztcs-wiki-bot apply ...`` saves reviewed patches (see :mod:`.apply`), and any
+other invocation runs the read-only review-queue pipeline.
 """
 
 from __future__ import annotations
@@ -19,8 +20,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="nztcs-wiki-bot",
         description="Generate a Wikipedia review queue of NZTCS status patches. "
-        "Read-only: never edits Wikipedia. "
-        "Use 'nztcs-wiki-bot fetch REPORT_ID' to download a report CSV first.",
+        "This run is read-only: it never edits Wikipedia. "
+        "Use 'nztcs-wiki-bot fetch REPORT_ID' to download a report CSV first, and "
+        "'nztcs-wiki-bot apply' to save reviewed patches, confirming each one.",
     )
     p.add_argument("--csv", required=True, help="Path to an NZTCS report CSV")
     p.add_argument("--out", default="review", help="Output directory (default: review/)")
@@ -46,6 +48,10 @@ def main(argv: list[str] | None = None) -> int:
         from . import fetch
 
         return fetch.main(argv[1:])
+    if argv and argv[0] == "apply":
+        from . import apply
+
+        return apply.main(argv[1:])
 
     args = build_parser().parse_args(argv)
 

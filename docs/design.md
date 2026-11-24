@@ -56,7 +56,9 @@ src/nztcs_wiki_bot/
 ├── csv_loader.py    CSV → Row; owns EXPECTED_FIELDS and strip_html
 ├── name_cleaner.py  raw NZTCS name → binomial or skip reason
 ├── status_map.py    status title → Speciesbox code, or why there isn't one
-├── wiki_client.py   the only module that talks to Wikipedia
+├── wiki_client.py   reads Wikipedia for the review run (read-only, cached)
+├── editor.py        the only module that writes to Wikipedia (used by apply)
+├── apply.py         `apply`: confirm and save reviewed patches, one at a time
 ├── speciesbox.py    find / verify / patch the infobox (mwparserfromhell)
 ├── reports.py       known reports → Wikidata item and shared ref name
 ├── citation.py      status_ref: {{CiteQ}} for known reports, else a scaffold
@@ -64,9 +66,25 @@ src/nztcs_wiki_bot/
 └── output.py        Buckets → review/ files (deterministic ordering)
 ```
 
-`wiki_client` is the only module that talks to Wikipedia, so its read-only
-guard covers every Wikipedia request. All other modules are pure apart from
-`fetch` (HTTP to NZTCS) and `output` (local files).
+The review run talks to Wikipedia only through `wiki_client`, whose read-only
+guard covers every request it makes. Writing is confined to `editor`, which
+only `apply` uses, and `apply` saves nothing without the operator confirming
+each edit (see [assisted-editing.md](assisted-editing.md)). All other modules
+are pure apart from `fetch` (HTTP to NZTCS) and `output` (local files).
+
+### Assisted editing, not a bot
+
+`apply` saves from the operator's own account, through a bot password with only
+the "Edit existing pages" grant. Every save needs a `y`. That keeps it within
+Wikipedia's rules for assisted editing, which don't need bot approval. Before
+asking, it fetches the live article and skips it unless the text still equals
+the run's `before`, so a stale patch can't overwrite a newer edit. The save
+also sends `baserevid` / `basetimestamp` / `starttimestamp` so MediaWiki
+catches a conflict in the gap between fetch and save. It never creates pages
+(`nocreate`), fails rather than edit logged out (`assert=user`), honours
+`{{bots}}`, keeps at least 5 seconds (default 10) between saves, and stops on a
+new talk-page message. Fully automatic editing would need a bot account and
+approval, and is out of scope.
 
 ## Key decisions
 

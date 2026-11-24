@@ -54,9 +54,9 @@ Title resolutions and page wikitext are cached on disk under `cache/`, as
 gzipped JSON files named `<kind>-<sha256 of key>.json.gz`. Re-runs over the same
 CSV make no requests at all. Delete `cache/` to refetch.
 
-## 4. Read-only scope
+## 4. What reads and what writes
 
-The bot **never** edits, logs in, or fetches tokens:
+**The review run never edits, logs in, or fetches tokens:**
 
 - `WikiClient._request()` raises `ValueError` for any `action` other than
   `query`, before anything is sent.
@@ -66,11 +66,30 @@ The bot **never** edits, logs in, or fetches tokens:
   It also checks that the client refuses each of 15 write actions (`edit`,
   `login`, `createaccount`, `rollback`, …) without sending anything.
 
-Because the tool makes no edits, Wikipedia's
-[bot approval process](https://en.wikipedia.org/wiki/Wikipedia:Bots/Requests_for_approval)
-doesn't apply to it. The edits you paste by hand are yours, and normal editing
-policy applies. See the note on bot-like editing in
-[reviewing-output.md](reviewing-output.md#doing-a-lot-of-these).
+**Edits happen only in `nztcs-wiki-bot apply`, through `editor.py`:**
+
+- It logs in with a [bot password](https://www.mediawiki.org/wiki/Manual:Bot_passwords)
+  on the operator's own account. Only the "Edit existing pages" grant is
+  needed. The password is sent only in the login request and never printed or
+  stored.
+- Every save needs the operator to confirm that edit. That makes it
+  [assisted editing](https://en.wikipedia.org/wiki/Wikipedia:Bot_policy#Assisted_editing_guidelines),
+  which doesn't need
+  [bot approval](https://en.wikipedia.org/wiki/Wikipedia:Bots/Requests_for_approval).
+  The operator is responsible for each edit, and normal editing policy applies.
+- Saves follow the [API:Edit](https://www.mediawiki.org/wiki/API:Edit)
+  recommendations: `baserevid`, `basetimestamp` and `starttimestamp` for
+  conflict detection, `nocreate`, `assert=user`, a CSRF token, and `maxlag=5`
+  with backoff.
+- It honours [`{{bots}}` / `{{nobots}}`](https://en.wikipedia.org/wiki/Template:Bots),
+  keeps at least 5 seconds (default 10) between saves, and stops when the
+  account has a new talk-page message.
+
+Making many fast, near-identical edits can still draw scrutiny under
+[WP:MEATBOT](https://en.wikipedia.org/wiki/Wikipedia:Bot_policy#Bot-like_editing),
+even when each one is confirmed. See the pace advice in
+[assisted-editing.md](assisted-editing.md#pace) and the note on bot-like
+editing in [reviewing-output.md](reviewing-output.md#doing-a-lot-of-these).
 
 ## 5. The NZTCS API
 

@@ -55,9 +55,14 @@ NZTCS_BOT_CONTACT=you@example.org pytest -m live --no-cov tests/live
 
 ## Ground rules
 
-- **Read-only stays read-only.** No change may add a write, login or token
-  request to `wiki_client.py`. `test_no_write_endpoints.py` must keep passing
-  unchanged. A PR that weakens it won't be merged.
+- **The review run stays read-only.** No change may add a write, login or token
+  request to `wiki_client.py`, and `test_no_write_endpoints.py` must keep
+  passing unchanged. A PR that weakens it won't be merged.
+- **Writes only in `editor.py`, only through `apply`, only after confirmation.**
+  Every save needs the operator's explicit `y`. Don't add a way to save without
+  it, such as a `--yes` flag or batch mode: that would be a bot, which needs a
+  separate bot account and approval on Wikipedia. `tests/integration/test_apply.py`
+  covers the safety checks; keep them passing.
 - **Fail loudly, never guess.** When the bot isn't sure (a name, a taxon, a
   status), it should put the row in a bucket with a reason, not produce a
   patch.
