@@ -57,18 +57,36 @@ Useful options:
 
 ## What you see for each entry
 
+The whole infobox, as it will be after the edit. Added lines start with `+`
+(green in a terminal), removed lines with `-` (red), and every other line is
+shown unchanged. So you can see at a glance whether the infobox already has a
+status, and what else is in it.
+
 ```
 [3/212] Aenetus virescens → Pūriri moth
 https://en.wikipedia.org/wiki/P%C5%ABriri_moth
 NZTCS status: NT (Not Threatened) · insert
 
-Add these lines directly above  | genus = Aenetus:
-    | status = NT
-    | status_system = NZTCS
-    | status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
+Infobox after this edit (+ added, - removed):
+
+    {{Speciesbox
+    | name = Pūriri moth
+    | image = Puriri moth-05.jpg
+  + | status = NT
+  + | status_system = NZTCS
+  + | status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
+    | genus = Aenetus
+    | species = virescens
+    | authority = ([[Edward Doubleday|Doubleday]], 1843)
+    }}
 
 Save this edit? [y]es [n]o [d]iff [o]pen [q]uit:
 ```
+
+For an article that already has a status from another system, such as IUCN,
+you'll see it unmarked, with the NZTCS lines added as `status2`. For an
+update, the old line is shown with `-` and the new one with `+`. Set
+`NO_COLOR=1` to turn the colours off.
 
 | Key | Does |
 |---|---|

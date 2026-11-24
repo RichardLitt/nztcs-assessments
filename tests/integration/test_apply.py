@@ -323,13 +323,49 @@ def test_diff_and_open_keep_asking(tmp_path):
     assert len(wiki.edits) == 1
 
 
-def test_shows_plain_change_before_asking(tmp_path, capsys):
+def test_shows_the_whole_infobox_before_asking(tmp_path, capsys):
     wiki = _wiki(ENTRIES[:1])
     _run(tmp_path, wiki, ["n"], entries=ENTRIES[:1])
     out = capsys.readouterr().out
-    assert "Add these lines directly above  | genus = Aenetus:" in out
-    assert "    | status = NV\n" in out
-    assert "+| status" not in out
+    expected = "\n".join([
+        "    {{Speciesbox",
+        "    | image = Aenetus virescens.jpg",
+        "  + | status = NV",
+        "  + | status_system = NZTCS",
+        "  + | status_ref = " + REF,
+        "    | genus = Aenetus",
+        "    | species = virescens",
+        "    | authority = ([[Edward Doubleday|Doubleday]], 1843)",
+        "    }}",
+    ])
+    assert expected in out
+    assert "\033[" not in out  # no colour codes when not a terminal
+
+
+def test_whole_infobox_shows_existing_status_for_secondary(tmp_path):
+    entry = _entry("7", "IUCN article", "iucn_only", "Aenetus", "virescens")
+    view = apply.infobox_view(apply.Entry(
+        entry.species_id, entry.binomial, entry.title, entry.status_code,
+        entry.action, entry.before, entry.after, entry.diff,
+    ))
+    assert "    | status = LC" in view and "    | status_system = IUCN3.1" in view
+    assert "  + | status2 = NV" in view
+
+
+def test_whole_infobox_marks_replaced_lines_and_colours_them(tmp_path):
+    entry = _entry("6", "Snail", "powelliphanta_augusta", "Powelliphanta", "augusta", "NE")
+    e = apply.Entry(entry.species_id, entry.binomial, entry.title, entry.status_code,
+                    entry.action, entry.before, entry.after, entry.diff)
+    plain = apply.infobox_view(e)
+    assert "  - | status = NC\n  + | status = NE" in plain
+    coloured = apply.infobox_view(e, color=True)
+    assert "\033[31m  - | status = NC\033[0m" in coloured
+    assert "\033[32m  + | status = NE\033[0m" in coloured
+
+
+def test_falls_back_to_diff_without_an_infobox():
+    e = apply.Entry("5", "A b", "A b", "NT", "insert", "plain", "plain text", "THE DIFF")
+    assert apply.infobox_view(e) == "THE DIFF"
 
 
 def test_maxlag_is_retried(tmp_path):

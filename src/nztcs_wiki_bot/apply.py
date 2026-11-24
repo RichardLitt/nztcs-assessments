@@ -21,6 +21,7 @@ once if the account gets a talk-page message. Every outcome is appended to
 from __future__ import annotations
 
 import argparse
+import difflib
 import getpass
 import json
 import os
@@ -44,7 +45,7 @@ from .editor import (
     WikiEditor,
     allows_bots,
 )
-from .output import plain_edits
+from .speciesbox import find_infobox
 from .wiki_client import CONTACT_ENV_VAR, MissingContactError, resolve_contact
 
 DEFAULT_INTERVAL = 10.0  # seconds between saves
@@ -108,30 +109,46 @@ def _article_url(title: str) -> str:
     return "https://en.wikipedia.org/wiki/" + quote(title.replace(" ", "_"))
 
 
-def format_change(entry: Entry) -> str:
-    """The change as plain text for the terminal (no diff markers)."""
+_GREEN, _RED, _RESET = "\033[32m", "\033[31m", "\033[0m"
+
+
+def infobox_view(entry: Entry, color: bool = False) -> str:
+    """The whole infobox as it will be after the edit, every line shown.
+
+    Added lines start with ``+``, removed lines with ``-``, and unchanged lines
+    are indented, so existing ``status`` lines are visible at a glance. Falls
+    back to the full diff if either version has no infobox.
+
+    >>> before = "{{Speciesbox\\n| genus = A\\n}}"
+    >>> after = "{{Speciesbox\\n| status = NT\\n| genus = A\\n}}"
+    >>> e = Entry("1", "A b", "A b", "NT", "insert", before, after, "")
+    >>> print(infobox_view(e))
+        {{Speciesbox
+      + | status = NT
+        | genus = A
+        }}
+    """
+    before, after = find_infobox(entry.before), find_infobox(entry.after)
+    if before is None or after is None:
+        return entry.diff
+    a = str(before.template).splitlines()
+    b = str(after.template).splitlines()
+
+    def paint(text: str, code: str) -> str:
+        return f"{code}{text}{_RESET}" if color else text
+
     out = []
-    for e in plain_edits(entry.before, entry.after):
-        n = "this line" if max(len(e.remove), len(e.add)) == 1 else "these lines"
-        if e.op == "insert":
-            where = (
-                f"directly above  {e.above.strip()}"
-                if e.above is not None
-                else f"directly below  {e.below.strip()}"
-                if e.below is not None
-                else ""
-            )
-            out.append(f"Add {n} {where}".rstrip() + ":")
-            out += [f"    {line}" for line in e.add]
-        elif e.op == "delete":
-            out.append(f"Remove {n}:")
-            out += [f"    {line}" for line in e.remove]
-        else:
-            out.append(f"Replace {n}:")
-            out += [f"    {line}" for line in e.remove]
-            out.append("with:")
-            out += [f"    {line}" for line in e.add]
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=a, b=b, autojunk=False).get_opcodes():
+        if tag == "equal":
+            out += [f"    {line}" for line in a[i1:i2]]
+            continue
+        out += [paint(f"  - {line}", _RED) for line in a[i1:i2]]
+        out += [paint(f"  + {line}", _GREEN) for line in b[j1:j2]]
     return "\n".join(out)
+
+
+def _use_color() -> bool:
+    return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
 
 
 class Applier:
@@ -147,7 +164,9 @@ class Applier:
         clock: Callable[[], float] | None = None,
         sleep: Callable[[float], None] | None = None,
         open_url: Callable[[str], object] | None = None,
+        color: bool | None = None,
     ) -> None:
+        self.color = _use_color() if color is None else color
         self.editor = editor
         self.log_path = log_path
         self.ask = ask
@@ -196,7 +215,8 @@ class Applier:
         self.say(_article_url(entry.title))
         label = _LABELS.get(entry.status_code, entry.status_code)
         self.say(f"NZTCS status: {entry.status_code} ({label}) · {entry.action}\n")
-        self.say(format_change(entry))
+        self.say("Infobox after this edit (+ added, - removed):\n")
+        self.say(infobox_view(entry, self.color))
         while True:
             answer = self.ask("\nSave this edit? [y]es [n]o [d]iff [o]pen [q]uit: ").strip().lower()
             if answer in ("d", "diff"):
