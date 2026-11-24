@@ -1,7 +1,11 @@
 # Reviewing output and applying patches
 
-The bot never edits Wikipedia. You do, one article at a time. This guide covers
-turning an entry in `review/matched.md` into a saved Wikipedia edit.
+The review run never edits Wikipedia. You do, one article at a time, either by
+hand as this guide describes, or with `nztcs-wiki-bot apply`, which shows you
+each change and saves it from your account when you confirm it (see
+[assisted-editing.md](assisted-editing.md)). Either way, the checks below are
+yours to make. This guide covers turning an entry in `review/matched.md` into a
+saved Wikipedia edit by hand.
 
 ## Before you start
 

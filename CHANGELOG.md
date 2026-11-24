@@ -8,6 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `nztcs-wiki-bot apply` saves reviewed patches to Wikipedia from your own
+  account, asking before every edit (assisted editing; no bot approval needed).
+  It logs in with a bot password, re-checks each article and skips any that
+  changed since the run, honours `{{bots}}`, refuses citations that still have
+  a TODO, guards saves against edit conflicts, keeps at least 10 seconds
+  between saves by default, stops on a new talk-page message, and logs every
+  outcome to `review/applied.tsv`. See `docs/assisted-editing.md`. The review
+  run itself is still read-only.
+
 - Each `matched.md` entry now gives the lines to paste as plain wikitext, with
   no `+`/`-` markers, and says where they go ("Add these lines directly above
   `| genus = …`", or "Replace this line … with: …"). The full diff is still

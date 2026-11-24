@@ -10,22 +10,27 @@ assessment. Even the flagship
 This tool takes an NZTCS report and, for each species, finds the Wikipedia article,
 checks it's the right one, and writes the exact wikitext change as a diff.
 
-> **It does not edit Wikipedia.** It only reads Wikipedia and writes proposed
-> edits to files on your computer. You review each one and paste it in by hand.
+> **A normal run doesn't edit Wikipedia.** It only reads Wikipedia and writes
+> proposed edits to files on your computer. You then apply them, either by
+> pasting each one in by hand or with `nztcs-wiki-bot apply`, which saves them
+> from your own account **only after you confirm each edit**.
 
 ## Is this safe?
 
 Yes, by design:
 
-- **Read-only.** Every request is a `GET` with `action=query`. The client
-  refuses anything else, and a test checks every request a full run makes.
-- **No login.** There is no login code and nowhere to put a password or token.
-  To Wikipedia, this is an anonymous reader. It cannot touch your account.
+- **The review run is read-only.** Every request is a `GET` with
+  `action=query`. The client refuses anything else, and a test checks every
+  request a full run makes. It doesn't log in.
+- **Edits only happen in `apply`, one confirmed edit at a time.** Writing lives
+  in a separate module that the review run never uses. `apply` logs in with a
+  limited [bot password](https://en.wikipedia.org/wiki/Special:BotPasswords)
+  that you create and can revoke. It asks before every save, and skips articles
+  that changed since your run. See
+  [docs/assisted-editing.md](docs/assisted-editing.md).
 - **Polite.** It follows Wikimedia's API etiquette: an identifying User-Agent,
   at most one request per second, `maxlag` backoff, batches of 50 titles, and an
   on-disk cache. Details are in [docs/wikipedia-policy.md](docs/wikipedia-policy.md).
-
-The worst a run can do is earn your IP a temporary, anonymous rate-limit.
 
 ## Install
 
@@ -111,6 +116,21 @@ as it is. For reports the bot knows, the citation is complete:
 a scaffold with a TODO marker you fill in before saving. The full
 walkthrough is in [docs/reviewing-output.md](docs/reviewing-output.md). You are
 the editor of record, not the bot.
+
+## Saving edits with `apply`
+
+Instead of pasting by hand, `apply` goes through `review/matched.jsonl`, shows
+you each change, and saves it from your account when you press `y`:
+
+```bash
+export NZTCS_BOT_USERNAME=You@nztcs     # a bot password from Special:BotPasswords
+nztcs-wiki-bot apply --limit 5          # asks for the password; try a few first
+```
+
+It re-checks each article first and skips any that changed since your run,
+keeps at least 10 seconds between saves, stops if you get a talk-page message,
+and logs every outcome to `review/applied.tsv`. Setup and details are in
+[docs/assisted-editing.md](docs/assisted-editing.md).
 
 ## Command-line options
 
