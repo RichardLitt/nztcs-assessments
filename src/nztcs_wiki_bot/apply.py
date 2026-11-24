@@ -25,6 +25,7 @@ import difflib
 import getpass
 import json
 import os
+import re
 import sys
 import time
 import webbrowser
@@ -151,6 +152,68 @@ def _use_color() -> bool:
     return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
 
 
+# Status names that might appear in an article's prose: every NZTCS title the
+# tool knows, plus the group names and older (2002/2008) categories.
+_STATUS_NAMES = sorted(
+    {
+        *status_map.STATUS_CODES,
+        *status_map.PENDING_WIKIPEDIA_CODES,
+        "At Risk", "Threatened", "Serious Decline", "Gradual Decline", "Sparse",
+        "Range Restricted", "Non-resident Native",
+    },
+    key=len,
+    reverse=True,
+)
+_STATUS_NAME = re.compile("|".join(re.escape(n) for n in _STATUS_NAMES), re.IGNORECASE)
+_NZTCS_HINT = re.compile(r"Threat Classification|NZTCS|Department of Conservation", re.IGNORECASE)
+
+
+def _plain(text: str) -> str:
+    """Wikitext → readable text: drop refs, comments, templates and markup."""
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+    text = re.sub(r"<ref[^>]*/>|<ref[^>]*>.*?</ref>", "", text, flags=re.DOTALL)
+    text = re.sub(r"\{\{[^{}]*\}\}", "", text)
+    text = re.sub(r"\[\[(?:[^|\]]*\|)?([^\]]*)\]\]", r"\1", text)
+    return re.sub(r"'{2,}", "", text)
+
+
+def status_sentences(entry: Entry, limit: int = 3) -> list[str]:
+    """Sentences outside the infobox that describe an NZTCS status.
+
+    A sentence counts if it mentions the NZTCS (or the Department of
+    Conservation) and a status name. The infobox patch doesn't change prose,
+    so these may contradict the new status.
+
+    >>> before = ("{{Speciesbox\\n| genus = A\\n}}\\nA moth. In 2017 the "
+    ...           "[[Department of Conservation]] classified it as ''Nationally "
+    ...           "Vulnerable''.<ref>x</ref> It flies at night.")
+    >>> status_sentences(Entry("1", "A b", "A b", "DD", "insert", before, before, ""))
+    ['In 2017 the Department of Conservation classified it as Nationally Vulnerable.']
+    """
+    box = find_infobox(entry.before)
+    text = entry.before.replace(str(box.template), "", 1) if box else entry.before
+    found = []
+    for sentence in re.split(r"(?<=[.!?])\s+|\n+", _plain(text)):
+        sentence = " ".join(sentence.split())
+        if _NZTCS_HINT.search(sentence) and _STATUS_NAME.search(sentence):
+            found.append(sentence if len(sentence) <= 300 else sentence[:299] + "…")
+            if len(found) == limit:
+                break
+    return found
+
+
+def mentions_status(sentence: str, code: str) -> bool:
+    """Whether a sentence names the status for ``code``.
+
+    >>> mentions_status("classified as Data Deficient", "DD")
+    True
+    >>> mentions_status("classified as Nationally Vulnerable", "DD")
+    False
+    """
+    label = _LABELS.get(code, code)
+    return label.lower() in sentence.lower()
+
+
 class Applier:
     """Walk the entries, asking before each save. Injectable for tests."""
 
@@ -217,6 +280,7 @@ class Applier:
         self.say(f"NZTCS status: {entry.status_code} ({label}) · {entry.action}\n")
         self.say("Infobox after this edit (+ added, - removed):\n")
         self.say(infobox_view(entry, self.color))
+        self._warn_about_prose(entry)
         while True:
             answer = self.ask("\nSave this edit? [y]es [n]o [d]iff [o]pen [q]uit: ").strip().lower()
             if answer in ("d", "diff"):
@@ -230,6 +294,23 @@ class Applier:
                 return "quit"
             elif answer in ("y", "yes"):
                 return self._save(entry, page)
+
+    def _warn_about_prose(self, entry: Entry) -> None:
+        sentences = status_sentences(entry)
+        if not sentences:
+            return
+        label = _LABELS.get(entry.status_code, entry.status_code)
+        self.say("\nThe article text also describes a conservation status:")
+        for sentence in sentences:
+            self.say(f'  "{sentence}"')
+        if all(mentions_status(s, entry.status_code) for s in sentences):
+            self.say(f"It mentions {label}, which matches.")
+        else:
+            self.say(
+                f"Note: the text may not match the new status ({label}). This tool only "
+                "changes the infobox, so open the article (o) and update the text yourself "
+                "if needed."
+            )
 
     def _save(self, entry: Entry, page) -> str:
         if self._last_save is not None:

@@ -133,6 +133,28 @@ outcome (`saved`, `skipped`, `changed`, `error:<code>`, …) and the new revisio
 ID for saves. To see a saved edit, open
 `https://en.wikipedia.org/w/index.php?diff=<revid>`.
 
+## When the article text also gives a status
+
+The patch only changes the infobox. Many articles also say something like
+"In 2017 the Department of Conservation classified it as Nationally
+Vulnerable" in the text, which would then contradict a new infobox status.
+
+When the article text has a sentence that mentions the NZTCS (or the
+Department of Conservation) and a status name, `apply` shows it under the
+infobox:
+
+```
+The article text also describes a conservation status:
+  "In 2025 this species was classified as having the conservation threat
+  classification of "At Risk, Uncommon" by the Department of Conservation."
+Note: the text may not match the new status (Data Deficient). This tool only
+changes the infobox, so open the article (o) and update the text yourself if
+needed.
+```
+
+If every sentence it found names the new status, it says so instead. It shows
+up to three sentences. Refs, comments and templates are ignored when looking.
+
 ## Pace
 
 You can work faster with `apply` than by hand, but keep a human pace and
