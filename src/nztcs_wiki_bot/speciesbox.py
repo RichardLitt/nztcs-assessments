@@ -185,10 +185,51 @@ def patch_status(
     else:
         action = _insert_primary(tmpl, status_code, ref_value)
 
-    after = str(infobox.code)
+    after = _keep_reused_definitions(wikitext, str(infobox.code))
     if after == wikitext:
         action = "noop"
     return PatchResult(before=wikitext, after=after, action=action)
+
+
+_DEFINITION = re.compile(
+    r"<ref\s+name\s*=\s*"
+    r"(?:\"(?P<dq>[^\"]+)\"|'(?P<sq>[^']+)'|(?P<bare>[^\s\"'/>]+))"
+    r"\s*>.*?</ref>",
+    re.DOTALL,
+)
+
+
+def _definitions(text: str) -> dict[str, str]:
+    """Named ref definitions in ``text``: name → the full ``<ref …>…</ref>``."""
+    defs: dict[str, str] = {}
+    for m in _DEFINITION.finditer(text):
+        name = m.group("dq") or m.group("sq") or m.group("bare")
+        defs.setdefault(name, m.group(0))
+    return defs
+
+
+def _keep_reused_definitions(before: str, after: str) -> str:
+    """Don't leave reuses of a citation pointing at nothing.
+
+    Replacing ``status_ref`` can remove the full definition of an old citation
+    that the article also reuses elsewhere as ``<ref name="X" />``. Wikipedia
+    shows those reuses as a cite error. For each definition that disappeared
+    but is still reused, put the full definition at its first remaining use.
+
+    >>> before = '| status_ref = <ref name="old">{{cite x}}</ref>\\nText.<ref name="old" />'
+    >>> after = '| status_ref = <ref name="new" />\\nText.<ref name="old" />'
+    >>> print(_keep_reused_definitions(before, after))
+    | status_ref = <ref name="new" />
+    Text.<ref name="old">{{cite x}}</ref>
+    """
+    remaining = _definitions(after)
+    for name, full in _definitions(before).items():
+        if name in remaining:
+            continue
+        reuse = re.search(r"<ref\s+" + _name_attr(name) + r"\s*/>", after)
+        if reuse:
+            after = after[: reuse.start()] + full + after[reuse.end() :]
+    return after
 
 
 def _name_attr(ref_name: str) -> str:

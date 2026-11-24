@@ -126,6 +126,11 @@ Patching is idempotent. `status_ref` is only rewritten if it doesn't already
 cite this report's ref name, and if the article already defines that ref
 elsewhere, the short `<ref name="…" />` form is used.
 
+Replacing `status_ref` can remove the full definition of an old citation that
+the article also reuses elsewhere as `<ref name="X" />`. When that happens, the
+patch moves the full definition to the first remaining reuse, so no reuse is
+left as a cite error.
+
 ### Only emit codes Wikipedia can render
 
 The code table is restricted to what Wikipedia's `Module:Conservation status`

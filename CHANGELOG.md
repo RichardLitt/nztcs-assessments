@@ -44,6 +44,10 @@ All notable changes to this project are documented here. The format follows
 
 - Existing ref names written bare or in single quotes (`<ref name=X>`) were not
   recognised, so a patch could define the same name twice.
+- Updating a status could remove the full definition of an old citation that
+  the article also reuses elsewhere as `<ref name="X" />`, leaving those reuses
+  as cite errors. The definition now moves to its first remaining use, and
+  `apply` says when an edit changes text outside the infobox.
 
 ## [0.1.0] - 2026-11-24
 

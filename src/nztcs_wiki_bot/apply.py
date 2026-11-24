@@ -151,6 +151,18 @@ def _use_color() -> bool:
     return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
 
 
+def changes_outside_infobox(entry: Entry) -> bool:
+    """Whether the edit also changes text outside the infobox, which
+    :func:`infobox_view` doesn't show (for example, a citation definition moved
+    into the body so its other uses keep working)."""
+    before, after = find_infobox(entry.before), find_infobox(entry.after)
+    if before is None or after is None:
+        return False
+    rest_before = entry.before.replace(str(before.template), "", 1)
+    rest_after = entry.after.replace(str(after.template), "", 1)
+    return rest_before != rest_after
+
+
 class Applier:
     """Walk the entries, asking before each save. Injectable for tests."""
 
@@ -217,6 +229,11 @@ class Applier:
         self.say(f"NZTCS status: {entry.status_code} ({label}) · {entry.action}\n")
         self.say("Infobox after this edit (+ added, - removed):\n")
         self.say(infobox_view(entry, self.color))
+        if changes_outside_infobox(entry):
+            self.say(
+                "\nThis edit also changes text outside the infobox, such as an old "
+                "citation moved so its other uses keep working. Press d to see it."
+            )
         while True:
             answer = self.ask("\nSave this edit? [y]es [n]o [d]iff [o]pen [q]uit: ").strip().lower()
             if answer in ("d", "diff"):

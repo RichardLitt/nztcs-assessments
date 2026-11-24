@@ -119,6 +119,15 @@ fetching and saving, Wikipedia refuses it as an edit conflict instead of
 overwriting their change. It never creates pages, and it fails rather than edit
 logged out.
 
+## Edits outside the infobox
+
+Almost every edit only touches the infobox. One exception: when an update
+replaces a `status_ref` that held the full definition of an old citation the
+article reuses elsewhere, that definition is moved to its first other use, so
+those citations keep working. When an edit changes anything outside the
+infobox, `apply` says so under the infobox. Press `d` to see the whole diff
+before deciding.
+
 ## When it stops on its own
 
 - **A talk-page message.** After each save, it checks whether you have a new
