@@ -34,7 +34,7 @@ CSV ─▶ clean name ─▶ skip? ─▶ map status ─▶ resolve title ─▶
 | Step | Module | Failure goes to |
 |---|---|---|
 | Load + strip HTML | `csv_loader` | (error if columns are missing) |
-| Extract binomial; skip undescribed (`sp.`) and quoted-genus names | `name_cleaner` | `skipped` |
+| Extract binomial; skip undescribed, quoted-genus, `cf.`/`aff.`, subspecies and `s.l.`/`s.s.` names | `name_cleaner` | `skipped` |
 | Map status title to code | `status_map` | `unmapped` |
 | Resolve title, following redirects (batched, before the per-row loop) | `wiki_client` | `no_match` (`missing`) |
 | Fetch current wikitext | `wiki_client` | `no_match` (`no-wikitext`) |
@@ -151,12 +151,22 @@ renders "Naturally Uncommon", so `status_map.code_for()` emits it only for
 module has an "Uncommon" code. The manual treats an unknown state as unnatural,
 and a blank criteria code is handled the same way.
 
-### Skip names that can't match
+### Skip names that can't match, or whose status isn't the species'
 
-Undescribed species (`Archyala sp. A (NZAC…)`) have no article. Scare-quoted
-genera (`"Acroclita" discariana`) mark an uncertain generic placement that no
-article title will use. Both are skipped before any request is made and listed
-in `skipped.tsv` with a reason.
+These are skipped before any request is made and listed in `skipped.tsv` with a
+reason:
+
+| Reason | Example | Why |
+|---|---|---|
+| `undescribed` | `Archyala sp. A (NZAC…)` | No article exists. |
+| `quoted_genus` | `"Acroclita" discariana` | An uncertain generic placement that no article title will use. |
+| `uncertain_identification` | `Chalastra cf. pellurgata` | `cf.` / `aff.`: a provisional identification, not the named species. |
+| `subspecies` | `Vanessa gonerilla ida` | The status is for the subspecies. Putting it on the species article would claim it for the whole species. |
+| `taxon_concept` | `Pyrgotis pyramidias s.s.` | The report assesses a broad (`s.l.`) and a narrow (`s.s.`) concept separately, with different statuses. Neither belongs to the article as such. |
+
+A `s.l.` / `s.s.` straight after the genus (`Hierodoris s.l. insignis`) only
+qualifies the genus, so it is dropped and *Hierodoris insignis* is looked up as
+normal.
 
 ### Citations come from Wikidata where possible
 

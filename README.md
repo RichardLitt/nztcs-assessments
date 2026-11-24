@@ -83,7 +83,7 @@ in exactly one bucket:
 | `ambiguous.md` / `.jsonl` | An article was found but needs your eyes: no infobox, an infobox for a different taxon, or the status is already current. |
 | `unmapped.tsv` | No Wikipedia code for this status: not assessed, a category Wikipedia can't display (e.g. Vagrant), or a title the tool has never seen. |
 | `no_match.tsv` | No Wikipedia article for that name. |
-| `skipped.tsv` | Undescribed (`sp. A`) or quoted-genus names, skipped before lookup. |
+| `skipped.tsv` | Names skipped before lookup: undescribed (`sp. A`), quoted genus, `cf.`/`aff.`, subspecies, and `s.l.`/`s.s.` concepts. A subspecies' status never goes on the species article. |
 | `stats.txt` | Tallies, including `filtered` rows left out by `--species`/`--limit`. `balanced True` means every row was accounted for. |
 
 Each entry in `matched.md` looks like this:

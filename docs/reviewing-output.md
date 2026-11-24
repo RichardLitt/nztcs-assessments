@@ -128,7 +128,7 @@ content change.
   but not this tool's job.
 - **`unmapped.tsv`**: there's no Wikipedia code to add. See
   [nztcs-status-codes.md](nztcs-status-codes.md).
-- **`skipped.tsv`**: names that can't be matched as written.
+- **`skipped.tsv`**: names that can't be matched as written, or whose status belongs to a subspecies or a narrower or broader concept of the species, not the species article. See the `reason` column.
 
 ## Doing a lot of these
 
