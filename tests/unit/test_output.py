@@ -77,3 +77,50 @@ def test_output_is_deterministic(tmp_path):
     write_review(out1, b1)
     write_review(out2, Buckets(rows_in=2, matched=[_entry("1"), _entry("2")]))
     assert (out1 / "matched.jsonl").read_bytes() == (out2 / "matched.jsonl").read_bytes()
+
+
+# -- paste-ready edits --------------------------------------------------------
+
+from nztcs_wiki_bot.output import plain_edits  # noqa: E402
+
+
+def test_md_gives_plain_lines_to_copy(tmp_path):
+    write_review(tmp_path, Buckets(rows_in=1, matched=[_entry()]))
+    md = (tmp_path / "matched.md").read_text(encoding="utf-8")
+    # Copy block: no diff markers, and it comes before the (folded) diff.
+    assert "```wikitext\n| status = NV\n```" in md
+    assert md.index("```wikitext") < md.index("<details>") < md.index("```diff")
+    # The new line sits at the end of the box, so it points at the line before "}}".
+    assert "**Add** this line directly below `| species = virescens`:" in md
+
+
+def test_jsonl_includes_edits(tmp_path):
+    write_review(tmp_path, Buckets(rows_in=1, matched=[_entry()]))
+    obj = json.loads((tmp_path / "matched.jsonl").read_text(encoding="utf-8"))
+    assert obj["edits"] == [
+        {"op": "insert", "remove": [], "add": ["| status = NV"],
+         "above": None, "below": "| species = virescens"}
+    ]
+
+
+def test_insert_points_at_following_line():
+    before = "{{Speciesbox\n| image = x.jpg\n| genus = A\n}}"
+    after = "{{Speciesbox\n| image = x.jpg\n| status = NT\n| status_system = NZTCS\n| genus = A\n}}"
+    (edit,) = plain_edits(before, after)
+    assert edit.op == "insert"
+    assert edit.add == ["| status = NT", "| status_system = NZTCS"]
+    assert edit.above == "| genus = A" and edit.below is None
+
+
+def test_update_gives_replace_pairs():
+    before = "| status = NC\n| status_system = NZTCS\n| status_ref = <ref name=old />\n"
+    after = "| status = NE\n| status_system = NZTCS\n| status_ref = <ref name=new />\n"
+    edits = plain_edits(before, after)
+    assert [(e.op, e.remove, e.add) for e in edits] == [
+        ("replace", ["| status = NC"], ["| status = NE"]),
+        ("replace", ["| status_ref = <ref name=old />"], ["| status_ref = <ref name=new />"]),
+    ]
+
+
+def test_no_change_gives_no_edits():
+    assert plain_edits("a\nb", "a\nb") == []

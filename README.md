@@ -74,7 +74,7 @@ in exactly one bucket:
 
 | File | What's in it |
 |---|---|
-| `matched.md` / `.jsonl` | **Start here.** Confident matches, each with a diff to paste. |
+| `matched.md` / `.jsonl` | **Start here.** Confident matches, each with the lines to paste and where, plus the full diff. |
 | `ambiguous.md` / `.jsonl` | An article was found but needs your eyes: no infobox, an infobox for a different taxon, or the status is already current. |
 | `unmapped.tsv` | No Wikipedia code for this status: not assessed, a category Wikipedia can't display (e.g. Vagrant), or a title the tool has never seen. |
 | `no_match.tsv` | No Wikipedia article for that name. |
@@ -90,17 +90,23 @@ Each entry in `matched.md` looks like this:
 - **NZTCS status:** `NT`
 - **Patch action:** insert
 
-```diff
- | image = Aenetus virescens.jpg
-+| status = NT
-+| status_system = NZTCS
-+| status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
- | genus = Aenetus
+**Add** these lines directly above `| genus = Aenetus`:
+
+```wikitext
+| status = NT
+| status_system = NZTCS
+| status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
 ```
+
+<details>
+<summary>Full diff</summary>
+…
+</details>
 ````
 
-To apply one, open the article, click **Edit source**, add the `+` lines to the
-infobox, preview, and save. For reports the bot knows, the citation is complete:
+To apply one, open the article, click **Edit source**, paste the block where the
+entry says, preview, and save. The block is plain wikitext, so it can be copied
+as it is. For reports the bot knows, the citation is complete:
 `{{CiteQ}}` builds it from the report's Wikidata item. For any other report it's
 a scaffold with a TODO marker you fill in before saving. The full
 walkthrough is in [docs/reviewing-output.md](docs/reviewing-output.md). You are

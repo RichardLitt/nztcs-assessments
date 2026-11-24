@@ -13,7 +13,8 @@ turning an entry in `review/matched.md` into a saved Wikipedia edit.
 ## For each entry in `matched.md`
 
 Each entry has a heading (`binomial → article`), the NZTCS status code, the
-patch action, and a unified diff:
+patch action, the lines to copy into the article, and the full diff (folded
+under **Full diff**) for checking:
 
 | Patch action | Meaning |
 |---|---|
@@ -36,8 +37,16 @@ Click **Edit source** (not the visual editor). The infobox is near the top:
 `{{Speciesbox`, or occasionally `{{Taxobox}}`, `{{Subspeciesbox}}` or
 `{{Automatic taxobox}}`.
 
-Make the change shown in the diff: add the `+` lines and remove the `-` lines.
-Lines starting with a space are context, so leave them as they are. Where you put the new
+Follow the instructions in the entry. The code blocks contain plain wikitext
+with no diff markers, so you can copy them as they are:
+
+- **Add these lines directly above `| genus = …`**: put your cursor at the
+  start of that line in the edit box, and paste.
+- **Replace this line … with:** find the first line in the edit box, and
+  replace the whole line with the second.
+
+If you'd rather work from the diff, open **Full diff**: `+` lines are added,
+`-` lines removed, and lines starting with a space are context. Where you put the new
 lines inside the template doesn't affect rendering, as long as they're inside
 the infobox's own braces, not inside a nested template such as
 `{{Specieslist}}`, and each parameter appears only once. The bot puts them
