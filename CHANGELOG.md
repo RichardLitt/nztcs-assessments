@@ -33,6 +33,10 @@ All notable changes to this project are documented here. The format follows
   `--show-skipped` shows them again. The record is the existing
   `review/applied.tsv`.
 
+- `apply --limit N` now means "ask me about N entries". Entries skipped
+  without asking (already applied, changed since the run, skipped in an earlier
+  session) no longer use up the limit.
+
 ### Changed
 
 - Citations for known reports are now complete: `status_ref` is

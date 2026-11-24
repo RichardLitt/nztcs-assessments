@@ -51,7 +51,7 @@ Useful options:
 | Option | What it does |
 |---|---|
 | `--species TEXT` | Only entries whose name contains `TEXT`, e.g. `--species Ichneutica`. |
-| `--limit N` | Look at the first `N` entries only. Good for a first try. |
+| `--limit N` | Stop after asking about `N` entries. Entries skipped without asking (already applied, changed since your run, skipped before…) don't count. Good for a first try. |
 | `--interval SECONDS` | Minimum gap between saves (default 10, minimum 5). |
 | `--show-skipped` | Also show entries you skipped in earlier sessions (see below). |
 | `--review DIR` | A review folder other than `review/`. |
