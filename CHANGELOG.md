@@ -9,8 +9,8 @@ All notable changes to this project are documented here. The format follows
 ### Changed
 
 - Citations for known reports are now complete: `status_ref` is
-  `{{CiteQ|<Wikidata item>}}` under the ref name existing articles already use
-  (`Hoare2026` for Lepidoptera 2025), instead of a `{{cite report}}` scaffold
+  `{{CiteQ|<Wikidata item>}}` under the ref name most existing articles use
+  (`NZTCS2025` for Lepidoptera 2025), instead of a `{{cite report}}` scaffold
   with a TODO marker. Known reports are listed in `reports.py`; other reports
   still get the scaffold.
 - If an article already cites the report under any ref name (matched by

@@ -19,14 +19,14 @@ def _row(report_name=LEPIDOPTERA, **kw):
 
 def test_known_report_uses_citeq():
     name, ref = citation.build_ref(_row())
-    assert name == "Hoare2026"
-    assert ref == '<ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>'
+    assert name == "NZTCS2025"
+    assert ref == '<ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>'
     assert citation.TODO_AUTHORS not in ref
 
 
 def test_known_report_lookup_ignores_surrounding_whitespace():
     name, _ = citation.build_ref(_row(f"  {LEPIDOPTERA} "))
-    assert name == "Hoare2026"
+    assert name == "NZTCS2025"
 
 
 @pytest.mark.parametrize(
@@ -49,12 +49,12 @@ def test_reuses_existing_citation_of_same_report(existing):
 def test_ignores_citations_of_other_reports():
     wikitext = '<ref name="other">{{CiteQ|Q1393790123}}</ref><ref name="x">{{CiteQ|Q42}}</ref>'
     name, _ = citation.build_ref(_row(), wikitext)
-    assert name == "Hoare2026"
+    assert name == "NZTCS2025"
 
 
 def test_ignores_unnamed_citation_of_same_report():
     name, _ = citation.build_ref(_row(), "<ref>{{CiteQ|Q139379012}}</ref>")
-    assert name == "Hoare2026"
+    assert name == "NZTCS2025"
 
 
 # Unknown report: {{cite report}} scaffold with a TODO marker.

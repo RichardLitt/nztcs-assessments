@@ -55,7 +55,7 @@ def build_ref(row: Row, wikitext: str = "") -> tuple[str, str]:
     ...     {"reportName": "Lepidoptera 2025 (Hoare et al. 2026)", "reportYear": "2026"}
     ... )
     >>> build_ref(r)
-    ('Hoare2026', '<ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>')
+    ('NZTCS2025', '<ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>')
     >>> build_ref(r, '<ref name=moths>{{CiteQ|Q139379012|pages=32}}</ref>')[0]
     'moths'
     """

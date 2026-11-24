@@ -94,7 +94,7 @@ Each entry in `matched.md` looks like this:
  | authority = ([[Edward Doubleday|Doubleday]], 1843)
 +| status = NT
 +| status_system = NZTCS
-+| status_ref = <ref name="Hoare2026">{{CiteQ|Q139379012}}</ref>
++| status_ref = <ref name="NZTCS2025">{{CiteQ|Q139379012}}</ref>
  }}
 ```
 ````
