@@ -112,6 +112,7 @@ def test_limit_and_species_filter():
     # only the Aenetus row should have been resolved
     assert client.resolve_calls[0] == ["Aenetus virescens"]
     assert [e.binomial for e in buckets.matched] == ["Aenetus virescens"]
+    assert buckets.filtered == 1  # Agrotis, excluded by --species
 
 
 def test_limit_caps_resolvable_rows_after_skips():
@@ -124,6 +125,7 @@ def test_limit_caps_resolvable_rows_after_skips():
     buckets = run(rows, client, PipelineConfig(limit=1))
     assert client.resolve_calls == [["Aenetus virescens"]]
     assert len(buckets.skipped) == 1
+    assert buckets.filtered == 1  # Agrotis, cut by the limit
 
 
 def test_already_current_status_is_ambiguous_not_matched():

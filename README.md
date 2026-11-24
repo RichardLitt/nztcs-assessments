@@ -79,7 +79,7 @@ in exactly one bucket:
 | `unmapped.tsv` | No Wikipedia code for this status: not assessed, a category Wikipedia can't display (e.g. Vagrant), or a title the tool has never seen. |
 | `no_match.tsv` | No Wikipedia article for that name. |
 | `skipped.tsv` | Undescribed (`sp. A`) or quoted-genus names, skipped before lookup. |
-| `stats.txt` | Tallies. `balanced True` means every row was accounted for. |
+| `stats.txt` | Tallies, including `filtered` rows left out by `--species`/`--limit`. `balanced True` means every row was accounted for. |
 
 Each entry in `matched.md` looks like this:
 
