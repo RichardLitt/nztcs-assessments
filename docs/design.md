@@ -62,6 +62,7 @@ src/nztcs_wiki_bot/
 ├── speciesbox.py    find / verify / patch the infobox (mwparserfromhell)
 ├── reports.yaml     known reports → Wikidata item and shared ref name
 ├── reports.py       loads and checks reports.yaml
+├── refnames.py      `refnames`: which ref names articles use for a report
 ├── citation.py      status_ref: {{CiteQ}} for known reports, else a scaffold
 ├── pipeline.py      orchestration; no I/O of its own
 └── output.py        Buckets → review/ files (deterministic ordering)

@@ -106,12 +106,22 @@ it to recognise an article that already cites the report.
 
 ### 4. Check `ref_name`
 
-Search Wikipedia for `insource:"Q<item>"`. If articles already cite the report,
-use the name most of them use. For Lepidoptera 2025 that's `NZTCS2025` (81
-articles in November 2026, against 16 for `Hoare2026` and 5 for `Hoare2025`).
-Otherwise, keep the suggested `NZTCS<assessment year>`. The bot reuses whatever
-name an individual article already has, so this name only matters for articles
-that don't cite the report yet.
+Save the file, then run this with the report's name, in quotes:
+
+```bash
+nztcs-wiki-bot refnames "Lepidoptera 2025 (Hoare et al. 2026)"
+```
+
+It searches Wikipedia articles for the report's Wikidata ID and PDF filename,
+counts the ref names they cite it under, and suggests the most used one. It's
+read-only, needs your contact details like the review run, and doesn't change
+`reports.yaml`: edit `ref_name` yourself if you want the suggestion. Automatic
+names such as `:0` are counted but never suggested. If no descriptive name is
+in use, keep `NZTCS<assessment year>`.
+
+The bot reuses whatever name an individual article already has, so `ref_name`
+only matters for articles that don't cite the report yet. A hand-typed citation
+with neither the Wikidata ID nor the PDF filename isn't found.
 
 ### 5. Run the bot again
 

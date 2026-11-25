@@ -10,8 +10,9 @@ Compliance with Wikimedia policy is baked in (see ``docs/wikipedia-policy.md``):
 * **Caching** — title resolutions and revision fetches are cached on disk.
 * **Read-only** — only ``action=query`` is ever issued; no write endpoint.
 
-The only network entrypoints are :meth:`WikiClient.resolve_titles` and
-:meth:`WikiClient.fetch_wikitext`.
+The only network entrypoints are :meth:`WikiClient.resolve_titles`,
+:meth:`WikiClient.fetch_wikitext`, and, for the ``refnames`` command, the
+uncached :meth:`WikiClient.search_titles` and :meth:`WikiClient.fetch_wikitexts`.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ import json
 import os
 import re
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from importlib.metadata import version
 from pathlib import Path
@@ -169,6 +170,43 @@ class WikiClient:
         self._cache_put("wikitext", title, text or "")
         return text
 
+    def search_titles(self, query: str) -> list[str]:
+        """Titles of articles matching a search ``query``. Not cached."""
+        params = {
+            "action": "query",
+            "list": "search",
+            "srsearch": query,
+            "srnamespace": 0,
+            "srlimit": "max",
+            "srprop": "",
+        }
+        return [
+            hit["title"]
+            for data in self._query_all(params)
+            for hit in data.get("query", {}).get("search", [])
+        ]
+
+    def fetch_wikitexts(self, titles: list[str]) -> dict[str, str]:
+        """Current wikitext of each existing page, 50 per request. Not cached."""
+        texts: dict[str, str] = {}
+        for i in range(0, len(titles), BATCH_SIZE):
+            params = {
+                "action": "query",
+                "prop": "revisions",
+                "rvprop": "content",
+                "rvslots": "main",
+                "titles": "|".join(titles[i : i + BATCH_SIZE]),
+            }
+            # A large batch is split over several responses; a page's text is
+            # in only one of them.
+            for data in self._query_all(params):
+                for page in data.get("query", {}).get("pages", []):
+                    for rev in page.get("revisions", []):
+                        content = rev.get("slots", {}).get("main", {}).get("content")
+                        if content is not None:
+                            texts[page["title"]] = content
+        return texts
+
     # -- internals ----------------------------------------------------------
 
     def _resolve_batch(self, batch: list[str]) -> dict[str, ResolvedTitle]:
@@ -210,6 +248,18 @@ class WikiClient:
             "resolve", cache_key, {k: vars(v) for k, v in result.items()}
         )
         return result
+
+    def _query_all(self, params: dict) -> Iterator[dict]:
+        """Yield each response to a query, following API continuation."""
+        more: dict = {}
+        while True:
+            data = self._request({**params, **more})
+            if "error" in data:
+                raise RuntimeError(f"Wikipedia API error: {data['error']}")
+            yield data
+            if "continue" not in data:
+                return
+            more = data["continue"]
 
     def _request(self, params: dict) -> dict:
         """Issue one GET with maxlag retry + rate limiting. Read-only."""

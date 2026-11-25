@@ -1,6 +1,8 @@
 """Command-line entrypoint: ``nztcs-wiki-bot`` / ``python -m nztcs_wiki_bot``.
 
 ``nztcs-wiki-bot fetch ...`` downloads a report (see :mod:`.fetch`),
+``nztcs-wiki-bot refnames ...`` counts the ref names
+articles use for a report (see :mod:`.refnames`),
 ``nztcs-wiki-bot apply ...`` saves reviewed patches (see :mod:`.apply`), and any
 other invocation runs the read-only review-queue pipeline.
 """
@@ -23,7 +25,8 @@ def build_parser() -> argparse.ArgumentParser:
         prog="nztcs-wiki-bot",
         description="Generate a Wikipedia review queue of NZTCS status patches. "
         "This run is read-only: it never edits Wikipedia. "
-        "Use 'nztcs-wiki-bot fetch REPORT_ID' to download a report CSV first, and "
+        "Use 'nztcs-wiki-bot fetch REPORT_ID' to download a report CSV first, "
+        "'nztcs-wiki-bot refnames NAME' to check a report's ref name, and "
         "'nztcs-wiki-bot apply' to save reviewed patches, confirming each one.",
     )
     p.add_argument("--csv", required=True, help="Path to an NZTCS report CSV")
@@ -64,6 +67,10 @@ def main(argv: list[str] | None = None) -> int:
         from . import fetch
 
         return fetch.main(argv[1:])
+    if argv and argv[0] == "refnames":
+        from . import refnames
+
+        return refnames.main(argv[1:])
     if argv and argv[0] == "apply":
         from . import apply
 
