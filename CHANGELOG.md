@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Reports are listed in `src/nztcs_wiki_bot/reports.yaml`, so adding one no
+  longer means editing Python. A mistake in the file stops the run with a
+  message saying what's wrong. The review run warns about each report with no
+  entry and prints a block to paste, and `fetch` prints the name of the report
+  it downloaded. Adds a dependency on PyYAML: run `pip install -e ".[dev]"`
+  again.
+- Citation entry for Reptilia 2025 (Hitchmough et al. 2026).
+
 - `nztcs-wiki-bot apply` saves reviewed patches to Wikipedia from your own
   account, asking before every edit (assisted editing; no bot approval needed).
   It logs in with a bot password, re-checks each article and skips any that
@@ -42,7 +50,7 @@ All notable changes to this project are documented here. The format follows
 - Citations for known reports are now complete: `status_ref` is
   `{{CiteQ|<Wikidata item>}}` under the ref name most existing articles use
   (`NZTCS2025` for Lepidoptera 2025), instead of a `{{cite report}}` scaffold
-  with a TODO marker. Known reports are listed in `reports.py`; other reports
+  with a TODO marker. Known reports are listed in `reports.yaml`; other reports
   still get the scaffold.
 - If an article already cites the report under any ref name (matched by
   Wikidata ID or full-text URL), the patch reuses it as `<ref name="..." />`

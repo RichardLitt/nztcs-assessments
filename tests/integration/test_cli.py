@@ -2,14 +2,16 @@
 
 import responses
 
+from nztcs_wiki_bot import reports
 from nztcs_wiki_bot.cli import main
+from nztcs_wiki_bot.csv_loader import EXPECTED_FIELDS
 from nztcs_wiki_bot.wiki_client import API_URL
 
 SPECIESBOX = "{{Speciesbox\n| genus = Aenetus\n| species = virescens\n}}"
 
 
 @responses.activate
-def test_cli_writes_review(tmp_path, monkeypatch):
+def test_cli_writes_review(tmp_path, monkeypatch, capsys):
     # Resolve call (batch) then a wikitext fetch.
     responses.add(
         responses.GET, API_URL,
@@ -37,6 +39,7 @@ def test_cli_writes_review(tmp_path, monkeypatch):
     out = tmp_path / "review"
     rc = main(["--csv", str(csv_path), "--out", str(out), "--cache", str(tmp_path / "cache")])
     assert rc == 0
+    assert "WARNING" not in capsys.readouterr().out
     assert (out / "matched.jsonl").read_text(encoding="utf-8").strip()
     assert (out / "stats.txt").exists()
     assert "balanced   True" in (out / "stats.txt").read_text(encoding="utf-8")
@@ -54,3 +57,37 @@ def test_cli_missing_contact_returns_2(tmp_path, monkeypatch, capsys):
 def test_cli_missing_csv_returns_2(tmp_path):
     rc = main(["--csv", str(tmp_path / "nope.csv")])
     assert rc == 2
+
+
+@responses.activate
+def test_cli_warns_about_report_without_entry(tmp_path, capsys):
+    responses.add(
+        responses.GET, API_URL, json={"query": {"pages": [{"title": "Aus bus", "missing": True}]}}
+    )
+    csv_path = tmp_path / "one.csv"
+    csv_path.write_text(
+        ",".join(EXPECTED_FIELDS)
+        + "\n1,2,Aus bus,,Declining,,,,Birds 2021 (Someone et al. 2022),2022,,\n",
+        encoding="utf-8",
+    )
+
+    rc = main(
+        ["--csv", str(csv_path), "--out", str(tmp_path / "r"), "--cache", str(tmp_path / "c")]
+    )
+
+    assert rc == 0
+    printed = capsys.readouterr().out
+    assert "WARNING: no citation entry" in printed
+    assert '"Birds 2021 (Someone et al. 2022)":\n  wikidata: Q...' in printed
+
+
+def test_cli_bad_reports_file_returns_2(tmp_path, monkeypatch, capsys):
+    def broken():
+        raise reports.ReportsFileError("reports.yaml: not valid YAML")
+
+    monkeypatch.setattr(reports, "known_reports", broken)
+    csv_path = tmp_path / "one.csv"
+    csv_path.write_text("speciesId\n", encoding="utf-8")
+
+    assert main(["--csv", str(csv_path)]) == 2
+    assert "not valid YAML" in capsys.readouterr().err

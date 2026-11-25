@@ -5,7 +5,7 @@ from nztcs_wiki_bot.csv_loader import Row
 
 LEPIDOPTERA = "Lepidoptera 2025 (Hoare et al. 2026)"
 UNKNOWN = "Coleoptera 2031 (Someone et al. 2032)"
-REPORT = reports.KNOWN_REPORTS[LEPIDOPTERA]
+REPORT = reports.known_reports()[LEPIDOPTERA]
 
 
 def _row(report_name=LEPIDOPTERA, **kw):
@@ -84,10 +84,3 @@ def test_scaffold_title_derivation():
 def test_build_ref_is_deterministic():
     for report_name in (LEPIDOPTERA, UNKNOWN):
         assert citation.build_ref(_row(report_name)) == citation.build_ref(_row(report_name))
-
-
-def test_every_known_report_is_well_formed():
-    for name, report in reports.KNOWN_REPORTS.items():
-        assert report.wikidata.startswith("Q") and report.wikidata[1:].isdigit(), name
-        assert report.ref_name and " " not in report.ref_name and '"' not in report.ref_name, name
-        assert report.url.startswith("https://"), name

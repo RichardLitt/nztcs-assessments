@@ -104,7 +104,9 @@ def test_cli_fetch_subcommand_writes_csv(tmp_path, capsys):
     assert rc == 0
     assert seen[0]["reportId"] == 42
     assert len(load_rows(out)) == 1
-    assert "Saved 1 assessments" in capsys.readouterr().out
+    printed = capsys.readouterr().out
+    assert "Saved 1 assessments" in printed
+    assert "Report: Lepidoptera 2025 (Hoare et al. 2026)" in printed
 
 
 @responses.activate

@@ -60,7 +60,7 @@ documentation and most articles put them.
 ### 3. Check the citation
 
 For reports the bot knows (listed in
-[`src/nztcs_wiki_bot/reports.py`](../src/nztcs_wiki_bot/reports.py)), the
+[`src/nztcs_wiki_bot/reports.yaml`](../src/nztcs_wiki_bot/reports.yaml)), the
 citation is already complete:
 
 ```
@@ -95,7 +95,7 @@ the series number to `series`. The result has this shape:
 ```
 
 Never save with the TODO marker still in place. Better still, add the report to
-`reports.py` (see [adding-a-report.md](adding-a-report.md#citations-for-other-reports))
+`reports.yaml` (see [adding-a-report.md](adding-a-report.md#adding-a-reports-citation))
 and re-run, so every article gets a complete citation.
 
 ### 4. Preview

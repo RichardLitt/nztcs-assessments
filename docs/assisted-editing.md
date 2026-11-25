@@ -140,7 +140,7 @@ asking, if:
 | `changed` | The article has been edited since your review run, so the patch could overwrite someone else's change. Re-run the tool to refresh. |
 | `already-applied` | The change is already there, for example from an earlier `apply` session. |
 | `nobots` | The article has `{{nobots}}`, or `{{bots}}` excludes you or the tool. |
-| `needs-citation` | The citation still has the TODO marker (a report not in `reports.py`). |
+| `needs-citation` | The citation still has the TODO marker (a report not in `reports.yaml`). |
 | `missing` | The article no longer exists. |
 
 When you press `y`, the save itself is also protected. It's sent with the
