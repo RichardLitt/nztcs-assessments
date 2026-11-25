@@ -114,6 +114,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     n = save_csv(assessments, out)
     print(f"Saved {n} assessments to {out}")
+    for name in sorted({str(a.get("reportName") or "") for a in assessments}):
+        print(f"Report: {name}")
     return 0
 
 

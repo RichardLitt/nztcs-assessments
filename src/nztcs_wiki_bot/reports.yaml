@@ -1,0 +1,24 @@
+# NZTCS reports the bot can cite in full.
+#
+# To add one, copy a block below and change it. No Python editing needed.
+# The review run prints a ready-made block for any report that's missing.
+# Full instructions: docs/adding-a-report.md
+#
+# Each block starts with the report's name, in quotes, EXACTLY as it appears in
+# the reportName column of the CSV. It needs these three fields:
+#
+#   wikidata: the report's Wikidata item ID
+#   ref_name: the <ref name="..."> that Wikipedia articles use for the report
+#   url:      the full-text link to the report
+
+# Hoare, Edwards, Knox, Frost & Michel 2026. NZ Threat Classification Series 51.
+"Lepidoptera 2025 (Hoare et al. 2026)":
+  wikidata: Q139379012
+  ref_name: NZTCS2025
+  url: https://www.doc.govt.nz/globalassets/documents/science-and-technical/nztcs51.pdf
+
+# NZ Threat Classification Series 50.
+"Reptilia 2025 (Hitchmough et al. 2026)":
+  wikidata: Q137916375
+  ref_name: NZTCS2025
+  url: https://www.doc.govt.nz/globalassets/documents/science-and-technical/nztcs50.pdf

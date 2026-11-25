@@ -60,7 +60,8 @@ src/nztcs_wiki_bot/
 ├── editor.py        the only module that writes to Wikipedia (used by apply)
 ├── apply.py         `apply`: confirm and save reviewed patches, one at a time
 ├── speciesbox.py    find / verify / patch the infobox (mwparserfromhell)
-├── reports.py       known reports → Wikidata item and shared ref name
+├── reports.yaml     known reports → Wikidata item and shared ref name
+├── reports.py       loads and checks reports.yaml
 ├── citation.py      status_ref: {{CiteQ}} for known reports, else a scaffold
 ├── pipeline.py      orchestration; no I/O of its own
 └── output.py        Buckets → review/ files (deterministic ordering)
@@ -173,7 +174,7 @@ normal.
 The CSV has the report name and year but not the authors or series number, so
 it can't produce a full citation by itself.
 
-For reports listed in `reports.py`, the citation is `{{CiteQ|<item>}}`, which
+For reports listed in `reports.yaml`, the citation is `{{CiteQ|<item>}}`, which
 renders the full reference from the report's Wikidata item. That's how existing
 articles already cite these reports. The default ref name is the one most of
 those articles use (`NZTCS2025` for Lepidoptera 2025), so the bot's citations

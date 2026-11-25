@@ -315,7 +315,7 @@ under the ref name most articles already use (`NZTCS2025` for Lepidoptera
 2025). If an article already cites the report, its existing citation is reused.
 For a report the tool doesn't know yet, the citation is a scaffold with a TODO
 to fill in by hand, and the bot won't save it. See
-[docs/adding-a-report.md](docs/adding-a-report.md#citations-for-other-reports)
+[docs/adding-a-report.md](docs/adding-a-report.md#adding-a-reports-citation)
 to add one.
 
 ## Documentation

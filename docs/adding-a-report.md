@@ -1,8 +1,16 @@
-# Running a different NZTCS report
+# Adding or running a different NZTCS report
 
 NZTCS assessments are published as separate reports, one per taxon group per
 assessment round (for example "Lepidoptera 2025" or "Birds 2021"). The bot works on
 one report CSV at a time.
+
+There are two separate things you might want to do:
+
+- **Run the bot on another report.** You don't need to edit any files: follow
+  steps 1 to 4.
+- **Give that report a complete citation.** Add a few lines to a YAML file:
+  see [Adding a report's citation](#adding-a-reports-citation). Without this,
+  `apply` won't save the report's edits.
 
 ## 1. Find the report ID
 
@@ -22,7 +30,9 @@ nztcs-wiki-bot fetch <report_id> --out birds.csv    # or choose the filename
 ```
 
 This makes one or more read-only `POST` requests to the NZTCS search API (it
-follows pagination for reports over 1000 species). It strips HTML italics from
+follows pagination for reports over 1000 species). It prints the name of the report it
+downloaded. **Check that it's the one you meant**: the filename you choose has
+no effect on what's downloaded. It also strips HTML italics from
 names and writes the 12 columns the bot expects. Report CSVs are gitignored, so
 fetch your own copy rather than committing it.
 
@@ -54,42 +64,74 @@ If you see one:
 3. Add the title to `tests/fixtures/csv/all_status_titles.csv` (copy a real
    row from the report), run `pytest`, and open a pull request.
 
-## Citations for other reports
+## Adding a report's citation
 
-The bot gives a complete citation, `{{CiteQ|<item>}}`, only for reports listed
-in `KNOWN_REPORTS` in
-[`src/nztcs_wiki_bot/reports.py`](../src/nztcs_wiki_bot/reports.py). For
-anything else it falls back to a `{{cite report}}` scaffold with a TODO marker
-that every reviewer has to fill in by hand. Adding the report takes a few
-minutes and saves that work on every article:
+Reports with a complete citation, `{{CiteQ|<item>}}`, are listed in
+[`src/nztcs_wiki_bot/reports.yaml`](../src/nztcs_wiki_bot/reports.yaml). For any
+other report, the bot writes a `{{cite report}}` scaffold with a TODO marker
+that you'd have to fill in by hand on every article, and `apply` won't save it.
 
-1. **Find the report's Wikidata item.** Search [Wikidata](https://www.wikidata.org)
-   for the report's title or its PDF link. Check that the item has the authors,
-   date, series and full-text URL. If there's no item, you can create one on
-   Wikidata ([WikiProject Source Metadata](https://www.wikidata.org/wiki/Wikidata:WikiProject_Source_Metadata)
-   lists the usual properties), or skip this section and use the scaffold.
-2. **Find the ref name articles already use.** Search Wikipedia for
-   `insource:"Q<item>"`. If articles already cite it, use the name most of them
-   use. For Lepidoptera 2025 that's `NZTCS2025` (81 articles in November 2026,
-   against 16 for `Hoare2026` and 5 for `Hoare2025`). Otherwise, use
-   `NZTCS<assessment year>`. The bot reuses whatever name an individual article
-   already has, so this name only matters for articles that don't cite the
-   report yet.
-3. **Add an entry** to `KNOWN_REPORTS`, keyed by the report's `reportName`
-   exactly as it appears in the CSV:
+### 1. Get a block to paste
 
-   ```python
-   "Lepidoptera 2025 (Hoare et al. 2026)": Report(
-       wikidata="Q139379012",
-       ref_name="NZTCS2025",
-       url="https://www.doc.govt.nz/globalassets/documents/science-and-technical/nztcs51.pdf",
-   ),
-   ```
+Run the bot on the report's CSV. For each report with no entry, it prints a
+warning with a block like this (you can stop the run with Ctrl+C once you've
+copied it):
 
-4. Run `pytest` and open a pull request.
+```yaml
+"Hymenoptera 2014 (Ward et al. 2017)":
+  wikidata: Q...
+  ref_name: NZTCS2014
+  url: https://...
+```
 
-Without an entry, the scaffold is built from the `reportName` and `reportYear`
-columns, for example ref name `NZTCS-Birds-2021` and title *Conservation status
-of New Zealand Birds, 2021*. That title is generated, so it may not match the
-published report's title word for word. See
+Paste it at the end of `reports.yaml`. Keep the first line exactly as printed:
+it's matched character for character against the CSV's `reportName` column.
+Keep the two-space indent on the other lines.
+
+### 2. Fill in `wikidata`
+
+Search [Wikidata](https://www.wikidata.org) for the report's title or its PDF
+link, and copy the item ID (`Q` followed by digits). Check that the item has the
+authors, date, series and full-text URL, because `{{CiteQ}}` builds the citation
+from them. If there's no item, you can create one
+([WikiProject Source Metadata](https://www.wikidata.org/wiki/Wikidata:WikiProject_Source_Metadata)
+lists the usual properties), or leave the report out and complete the scaffold
+by hand.
+
+### 3. Fill in `url`
+
+The full-text link to the report, usually a PDF on `www.doc.govt.nz`. Use the
+address listed on the Wikidata item (*full work available at URL*). The bot uses
+it to recognise an article that already cites the report.
+
+### 4. Check `ref_name`
+
+Search Wikipedia for `insource:"Q<item>"`. If articles already cite the report,
+use the name most of them use. For Lepidoptera 2025 that's `NZTCS2025` (81
+articles in November 2026, against 16 for `Hoare2026` and 5 for `Hoare2025`).
+Otherwise, keep the suggested `NZTCS<assessment year>`. The bot reuses whatever
+name an individual article already has, so this name only matters for articles
+that don't cite the report yet.
+
+### 5. Run the bot again
+
+```bash
+nztcs-wiki-bot --csv birds.csv --limit 10
+```
+
+The warning should be gone, and the citations in `review/matched.md` should use
+`{{CiteQ}}`. If the file has a mistake (a missing field, bad indentation, a
+report listed twice), the run stops and says what's wrong. To share the new
+entry, run `pytest` and open a pull request.
+
+If you installed with `pip install -e` as in the
+[README](../README.md#install-both-options), your changes to the file take
+effect straight away.
+
+### Without an entry
+
+The scaffold is built from the `reportName` and `reportYear` columns, for
+example ref name `NZTCS-Birds-2021` and title *Conservation status of New
+Zealand Birds, 2021*. That title is generated, so it may not match the published
+report's title word for word. See
 [reviewing-output.md](reviewing-output.md#other-reports-complete-the-scaffold).
