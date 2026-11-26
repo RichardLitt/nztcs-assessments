@@ -17,6 +17,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `nztcs-wiki-bot refnames "<report name>"` counts the ref names Wikipedia
+  articles use for a report in `reports.yaml` and suggests one. Read-only.
+
 - Reports are listed in `src/nztcs_wiki_bot/reports.yaml`, so adding one no
   longer means editing Python. A mistake in the file stops the run with a
   message saying what's wrong. The review run warns about each report with no

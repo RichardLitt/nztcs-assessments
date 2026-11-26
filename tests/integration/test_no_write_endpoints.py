@@ -11,7 +11,7 @@ import pytest
 import responses
 
 from nztcs_wiki_bot.cli import main
-from nztcs_wiki_bot.wiki_client import WikiClient
+from nztcs_wiki_bot.wiki_client import API_URL, WikiClient
 from tests.integration import wiki_site
 from tests.integration.test_end_to_end import CSV
 
@@ -37,6 +37,24 @@ def test_full_run_sends_only_read_queries(tmp_path):
         assert req.body in (None, b"", ""), req.url
         assert params.get("action") == "query", req.url
         assert params.get("action") not in WRITE_ACTIONS
+        assert not WRITE_PARAMS & params.keys(), req.url
+
+
+def test_refnames_sends_only_read_queries():
+    with responses.RequestsMock() as rsps:
+        rsps.add(responses.GET, API_URL, json={"query": {"search": [{"title": "Aus"}]}})
+        rsps.add(responses.GET, API_URL, json={"query": {"search": []}})
+        rsps.add(responses.GET, API_URL, json={"query": {"pages": [{"title": "Aus"}]}})
+        rc = main(["refnames", "Lepidoptera 2025 (Hoare et al. 2026)"])
+        calls = list(rsps.calls)
+
+    assert rc == 0
+    assert len(calls) == 3
+    for call in calls:
+        req = call.request
+        params = {k: v[0] for k, v in parse_qs(urlparse(str(req.url)).query).items()}
+        assert req.method == "GET", req.url
+        assert params.get("action") == "query", req.url
         assert not WRITE_PARAMS & params.keys(), req.url
 
 

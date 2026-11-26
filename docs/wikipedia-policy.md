@@ -52,7 +52,8 @@ Source: [API:Etiquette](https://www.mediawiki.org/wiki/API:Etiquette)
 Not a quoted rule, but the obvious way to avoid re-asking for the same data.
 Title resolutions and page wikitext are cached on disk under `cache/`, as
 gzipped JSON files named `<kind>-<sha256 of key>.json.gz`. Re-runs over the same
-CSV make no requests at all. Delete `cache/` to refetch.
+CSV make no requests at all. Delete `cache/` to refetch. The `refnames` command
+doesn't use the cache, because its counts should be current.
 
 ## 4. What reads and what writes
 

@@ -293,6 +293,7 @@ you've already edited then move to `ambiguous` as `already-current`.
 ```
 nztcs-wiki-bot --csv PATH [--contact TEXT] [--out DIR] [--cache DIR] [--limit N] [--species TEXT]
 nztcs-wiki-bot fetch [REPORT_ID] [--out PATH]
+nztcs-wiki-bot refnames REPORT_NAME [--contact TEXT]
 ```
 
 | Option | Default | Meaning |
@@ -306,6 +307,10 @@ nztcs-wiki-bot fetch [REPORT_ID] [--out PATH]
 
 `fetch` downloads report `REPORT_ID` (default `1176`) from nztcs.org.nz to
 `--out` (default `nztcs_report_<id>_<date>.csv`).
+
+`refnames` shows which ref names Wikipedia articles use for a report listed in
+`reports.yaml`, for use when
+[adding a report](docs/adding-a-report.md#4-check-ref_name).
 
 ## Citations
 
