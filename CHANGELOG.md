@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- NZTCS now takes `status2` when CITES is there, and CITES moves to `status3`
+  with its values unchanged. Wikipedia only draws a status graphic for the
+  first two statuses, so NZTCS in `status3` showed as text only. Articles
+  already in that order get a new `move` action that swaps them. Re-run the
+  review run to refresh `review/` files.
 - An existing second status, such as CITES in `status2`, is no longer
   overwritten. NZTCS goes in `status3` instead, and an NZTCS status already in
   `status2` or `status3` is updated where it is. If the template has no free

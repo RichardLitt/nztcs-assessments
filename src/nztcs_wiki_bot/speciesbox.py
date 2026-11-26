@@ -126,7 +126,8 @@ class PatchResult:
 
     before: str
     after: str
-    action: str  # "insert" | "update" | "add_secondary" | "noop" | "no_free_slot"
+    # "insert" | "update" | "add_secondary" | "move" | "noop" | "no_free_slot"
+    action: str
 
     @property
     def changed(self) -> bool:
@@ -174,6 +175,45 @@ def _choose_slot(infobox: Infobox) -> str | None:
     return None
 
 
+def _block_params(tmpl: Template, slot: str) -> list[Parameter]:
+    """A block's parameters, including spaced aliases (``status2 system``)."""
+    names = _block_names(slot)
+    return [p for p in tmpl.params if p.name.strip().lower().replace(" ", "_") in names]
+
+
+def _renumber(params: list[Parameter], slot: str) -> None:
+    """Rename block parameters to ``slot``, keeping their values and spacing."""
+    for param in params:
+        name = param.name.strip()
+        suffix = name[len("status0") :].replace(" ", "_")
+        param.name = str(param.name).replace(name, f"status{slot}{suffix}")
+
+
+def _give_nztcs_graphic(tmpl: Template, slot: str) -> tuple[str, bool]:
+    """Move CITES from ``status2`` to ``status3`` if NZTCS would be in ``status3``.
+
+    Wikipedia only draws a status graphic for the first two blocks, and CITES
+    has none to lose. Returns the block NZTCS now belongs in, and whether any
+    existing lines moved.
+    """
+    if slot != "3" or not _value(tmpl, "status2_system").upper().startswith("CITES"):
+        return slot, False
+    cites, third = _block_params(tmpl, "2"), _block_params(tmpl, "3")
+    if _value(tmpl, "status3_system").upper().startswith("NZTCS"):
+        _renumber(cites, "3")
+        _renumber(third, "2")
+        # Put the NZTCS lines first, so the blocks stay in numerical order.
+        for param in third:
+            tmpl.params.remove(param)
+        at = tmpl.params.index(cites[0])
+        tmpl.params[at:at] = third
+    else:
+        for param in third:  # empty placeholders
+            tmpl.params.remove(param)
+        _renumber(cites, "3")
+    return "2", True
+
+
 def _block_end_before(tmpl: Template, slot: str) -> Parameter | None:
     """The last parameter of the status blocks before ``slot``, which a new
     secondary block goes after."""
@@ -205,6 +245,10 @@ def patch_status(
        before the first taxon parameter (``taxon``, ``genus``, ``regnum``…),
        where the template documentation and most articles put it.
 
+    If NZTCS would be in ``status3`` behind CITES in ``status2``, CITES moves to
+    ``status3`` and NZTCS takes ``status2``, because only the first two blocks
+    show a graphic. Reordering with no other change has the action ``move``.
+
     Idempotent: re-running on already-patched wikitext is a no-op.
     """
     infobox = find_infobox(wikitext)
@@ -215,6 +259,7 @@ def patch_status(
     slot = _choose_slot(infobox)
     if slot is None:
         return PatchResult(before=wikitext, after=wikitext, action="no_free_slot")
+    slot, moved = _give_nztcs_graphic(tmpl, slot)
     ref_value = f'<ref name="{ref_name}" />' if _ref_defined(wikitext, ref_name) else ref_wikitext
 
     if _value(tmpl, f"status{slot}_system").upper().startswith("NZTCS"):
@@ -223,6 +268,9 @@ def patch_status(
         action = _add_secondary(tmpl, slot, status_code, ref_value)
     else:
         action = _insert_primary(tmpl, status_code, ref_value)
+
+    if moved and action == "noop":
+        action = "move"
 
     after = _keep_reused_definitions(wikitext, str(infobox.code))
     if after == wikitext:
