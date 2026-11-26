@@ -108,11 +108,13 @@ case-insensitively, ignoring markup. Anything else goes to `ambiguous`.
 
 `speciesbox.patch_status()`:
 
-1. **Existing `status_system = NZTCS`**: update `status` and `status_ref` in
-   place (action `update`).
-2. **Another system, e.g. IUCN**: leave it alone and add `status2`,
-   `status2_system = NZTCS`, `status2_ref` (action `add_secondary`, or
-   `update` if an NZTCS secondary already exists).
+1. **A block already has system NZTCS** (`status`, `status2` or `status3`):
+   update its code and ref in place (action `update`).
+2. **Other systems, e.g. IUCN or CITES**: leave them alone and add NZTCS in the
+   first empty block, `status2*` then `status3*` (action `add_secondary`). Only
+   `{{Speciesbox}}` and `{{Subspeciesbox}}` display `status3`. With no empty
+   block, nothing changes and the article goes to `ambiguous`
+   (`no-free-status-slot`).
 3. **No status**: insert `status`, `status_system`, `status_ref` just before
    the first taxon parameter (`taxon`, `genus`, `species`, `regnum`, an
    `unranked_*` rank and so on), so they sit after the name and image lines.
@@ -120,7 +122,7 @@ case-insensitively, ignoring markup. Anything else goes to `ambiguous`.
    them (80 of the 88 moth articles citing the 2025 report). With no taxon
    parameter, they're appended (action `insert`).
 
-New `status2*` lines go straight after the existing status block. Lines that
+New `status2*` or `status3*` lines go straight after the existing status blocks. Lines that
 already exist are updated where they are and never moved.
 
 Patching is idempotent. `status_ref` is only rewritten if it doesn't already

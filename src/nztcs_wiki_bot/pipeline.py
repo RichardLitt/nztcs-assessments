@@ -116,7 +116,9 @@ def run(rows: list[Row], client: WikiReader, config: PipelineConfig | None = Non
                     "species_id": row.species_id,
                     "binomial": binomial,
                     "title": res.canonical,
-                    "reason": "already-current",
+                    "reason": "no-free-status-slot"
+                    if patch.action == "no_free_slot"
+                    else "already-current",
                 }
             )
             continue

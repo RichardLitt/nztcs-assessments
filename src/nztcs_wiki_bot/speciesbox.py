@@ -30,6 +30,10 @@ INFOBOX_NAMES = {
     "automatic taxobox",
 }
 
+# How many status blocks (``status``, ``status2``, ``status3``) each template
+# displays. The others silently ignore ``status3``.
+_THREE_STATUS_TEMPLATES = {"speciesbox", "subspeciesbox"}
+
 # Parameters that start the taxon part of an infobox. The Speciesbox and
 # Taxobox documentation put the status block after the name and image
 # parameters and before these, as do most articles. Any ``unranked_*`` rank
@@ -122,7 +126,7 @@ class PatchResult:
 
     before: str
     after: str
-    action: str  # "insert" | "update" | "add_secondary" | "noop"
+    action: str  # "insert" | "update" | "add_secondary" | "noop" | "no_free_slot"
 
     @property
     def changed(self) -> bool:
@@ -140,12 +144,43 @@ def _taxon_start(tmpl: Template) -> Parameter | None:
     return None
 
 
-def _primary_block_end(tmpl: Template) -> Parameter | None:
-    """The last of ``status`` / ``status_system`` / ``status_ref``, which a new
-    ``status2`` block goes after."""
+def _block_names(slot: str) -> tuple[str, str, str]:
+    """The parameter names of a status block; ``slot`` is ``""``, ``"2"`` or ``"3"``."""
+    return f"status{slot}", f"status{slot}_system", f"status{slot}_ref"
+
+
+def _status_slots(infobox: Infobox) -> tuple[str, ...]:
+    return ("", "2", "3") if infobox.name in _THREE_STATUS_TEMPLATES else ("", "2")
+
+
+def _value(tmpl: Template, name: str) -> str:
+    return _clean_param(tmpl.get(name).value) if tmpl.has(name) else ""
+
+
+def _choose_slot(infobox: Infobox) -> str | None:
+    """The status block to write: the one already holding NZTCS, else the first
+    empty one. ``None`` if every block holds another status, which is never
+    overwritten.
+    """
+    tmpl = infobox.template
+    slots = _status_slots(infobox)
+    for slot in slots:
+        if _value(tmpl, f"status{slot}_system").upper().startswith("NZTCS"):
+            return slot
+    for slot in slots:
+        code, system, _ = _block_names(slot)
+        if not _value(tmpl, code) and not _value(tmpl, system):
+            return slot
+    return None
+
+
+def _block_end_before(tmpl: Template, slot: str) -> Parameter | None:
+    """The last parameter of the status blocks before ``slot``, which a new
+    secondary block goes after."""
+    earlier = {n for s in ("", "2", "3") if s < slot for n in _block_names(s)}
     last = None
     for param in tmpl.params:
-        if param.name.strip().lower() in ("status", "status_system", "status_ref"):
+        if param.name.strip().lower() in earlier:
             last = param
     return last
 
@@ -162,9 +197,11 @@ def patch_status(
 
     Branches (per design):
 
-    1. Already ``status_system = NZTCS`` → update ``status`` + ``status_ref``.
-    2. A non-NZTCS ``status_system`` (e.g. IUCN3.1) → add ``status2*`` block.
-    3. No status block → insert ``status`` / ``status_system`` / ``status_ref``
+    1. A status block already has system NZTCS → update its code and ref.
+    2. Other statuses (e.g. IUCN3.1, CITES) → add NZTCS in the first empty
+       block (``status2*``, then ``status3*`` where the template has it). With
+       none empty, change nothing (``no_free_slot``).
+    3. No status → insert ``status`` / ``status_system`` / ``status_ref``
        before the first taxon parameter (``taxon``, ``genus``, ``regnum``…),
        where the template documentation and most articles put it.
 
@@ -175,13 +212,15 @@ def patch_status(
         return PatchResult(before=wikitext, after=wikitext, action="noop")
 
     tmpl = infobox.template
-    system = current_status_system(infobox)
+    slot = _choose_slot(infobox)
+    if slot is None:
+        return PatchResult(before=wikitext, after=wikitext, action="no_free_slot")
     ref_value = f'<ref name="{ref_name}" />' if _ref_defined(wikitext, ref_name) else ref_wikitext
 
-    if system is not None and system.upper().startswith("NZTCS"):
-        action = _update_primary(tmpl, status_code, ref_value, ref_name)
-    elif system is not None:
-        action = _add_secondary(tmpl, status_code, ref_value, ref_name)
+    if _value(tmpl, f"status{slot}_system").upper().startswith("NZTCS"):
+        action = _update_block(tmpl, slot, status_code, ref_value, ref_name)
+    elif slot:
+        action = _add_secondary(tmpl, slot, status_code, ref_value)
     else:
         action = _insert_primary(tmpl, status_code, ref_value)
 
@@ -264,48 +303,28 @@ def _ref_name_in(value: str | Wikicode, ref_name: str) -> bool:
     return bool(re.search(_name_attr(ref_name), str(value)))
 
 
-def _update_primary(tmpl: Template, status_code: str, ref_value: str, ref_name: str) -> str:
+def _update_block(
+    tmpl: Template, slot: str, status_code: str, ref_value: str, ref_name: str
+) -> str:
+    code, system, ref = _block_names(slot)
     changed = False
-    has_code = tmpl.has("status") and _clean_param(tmpl.get("status").value) == status_code
-    if not has_code:
-        tmpl.add("status", status_code, preserve_spacing=True)
+    if _value(tmpl, code) != status_code:
+        _set_after(tmpl, _block_end_before(tmpl, slot), code, status_code)
         changed = True
-    if not tmpl.has("status_system") or not _clean_param(
-        tmpl.get("status_system").value
-    ).upper().startswith("NZTCS"):
-        tmpl.add("status_system", "NZTCS", preserve_spacing=True)
-        changed = True
-    # Only (re)write status_ref when it doesn't already cite our ref name.
-    if not (tmpl.has("status_ref") and _ref_name_in(tmpl.get("status_ref").value, ref_name)):
-        tmpl.add("status_ref", ref_value, preserve_spacing=True)
+    # Only (re)write the ref when it doesn't already cite our ref name.
+    if not (tmpl.has(ref) and _ref_name_in(tmpl.get(ref).value, ref_name)):
+        _set_after(tmpl, tmpl.get(system), ref, ref_value)
         changed = True
     return "update" if changed else "noop"
 
 
-def _add_secondary(tmpl: Template, status_code: str, ref_value: str, ref_name: str) -> str:
-    has_nztcs_secondary = tmpl.has("status2_system") and _clean_param(
-        tmpl.get("status2_system").value
-    ).upper().startswith("NZTCS")
-    changed = False
-    # New status2* lines go straight after the primary status block, in order.
-    after = _primary_block_end(tmpl)
-    has_code = tmpl.has("status2") and _clean_param(tmpl.get("status2").value) == status_code
-    if not has_code:
-        after = _set_after(tmpl, after, "status2", status_code)
-        changed = True
-    elif tmpl.has("status2"):
-        after = tmpl.get("status2")
-    if not has_nztcs_secondary:
-        after = _set_after(tmpl, after, "status2_system", "NZTCS")
-        changed = True
-    elif tmpl.has("status2_system"):
-        after = tmpl.get("status2_system")
-    if not (tmpl.has("status2_ref") and _ref_name_in(tmpl.get("status2_ref").value, ref_name)):
-        _set_after(tmpl, after, "status2_ref", ref_value)
-        changed = True
-    if not changed:
-        return "noop"
-    return "update" if has_nztcs_secondary else "add_secondary"
+def _add_secondary(tmpl: Template, slot: str, status_code: str, ref_value: str) -> str:
+    # New lines go straight after the earlier status blocks, in order. Empty
+    # placeholders are filled where they are.
+    after = _block_end_before(tmpl, slot)
+    for name, value in zip(_block_names(slot), (status_code, "NZTCS", ref_value), strict=True):
+        after = _set_after(tmpl, after, name, value)
+    return "add_secondary"
 
 
 def _set_after(tmpl: Template, after: Parameter | None, name: str, value: str) -> Parameter:
