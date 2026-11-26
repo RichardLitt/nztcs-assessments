@@ -260,25 +260,59 @@ _IUCN = "| status = VU\n| status_system = IUCN3.1\n| status_ref = <ref>i</ref>\n
 _CITES = "| status2 = CITES_A3\n| status2_system = CITES \n| status2_ref = <ref>c</ref>\n"
 
 
-def test_occupied_status2_is_kept_and_nztcs_goes_in_status3():
+_TNC = "| status2 = G3\n| status2_system = TNC\n| status2_ref = <ref>t</ref>\n"
+_CITES3 = _CITES.replace("status2", "status3")
+_NZ2 = f"| status2 = NV\n| status2_system = NZTCS\n| status2_ref = {_REF}\n"
+_NZ3 = _NZ2.replace("status2", "status3")
+_TAXON = "| genus = Aenetus\n| species = virescens\n}}"
+
+
+def test_cites_moves_to_status3_so_nztcs_gets_a_graphic():
     result = _statuses(_IUCN + _CITES)
     assert result.action == "add_secondary"
-    assert _IUCN + _CITES in result.after
-    assert _order(result.after) == [
-        "status", "status_system", "status_ref",
+    assert _order(result.after)[3:9] == [
         "status2", "status2_system", "status2_ref",
-        "status3", "status3_system", "status3_ref", "genus", "species",
+        "status3", "status3_system", "status3_ref",
     ]
+    assert _CITES3 in result.after
+    assert "status2_system = NZTCS" in result.after
 
 
-def test_existing_nztcs_status3_is_updated_in_place():
-    first = _statuses(_IUCN + _CITES)
-    assert _statuses(_IUCN + _CITES).after == first.after
-    old = first.after.replace("status3 = NV", "status3 = NE")
-    result = sb.patch_status(old, "Aenetus", "virescens", "NV", "NZTCS2025", _REF)
-    assert result.action == "update" and result.after == first.after
+def test_empty_status3_placeholders_make_way_for_cites():
+    result = _statuses(_IUCN + _CITES + "| status3 =\n| status3_system =\n")
+    assert _CITES3 in result.after
+    assert result.after.count("status3_system") == 1
+
+
+def test_spaced_cites_aliases_are_renumbered():
+    cites = _CITES.replace("status2_ref", "status2 ref")
+    assert _CITES3 in _statuses(_IUCN + cites).after
+
+
+def test_other_system_in_status2_is_not_moved():
+    result = _statuses(_IUCN + _TNC)
+    assert _IUCN + _TNC in result.after
+    assert "status3_system = NZTCS" in result.after
+
+
+def test_nztcs_behind_cites_is_swapped_into_status2():
+    result = _statuses(_IUCN + _CITES + _NZ3)
+    assert result.action == "move"
+    assert result.after == "{{Speciesbox\n" + _IUCN + _NZ2 + _CITES3 + _TAXON
     again = sb.patch_status(result.after, "Aenetus", "virescens", "NV", "NZTCS2025", _REF)
     assert again.action == "noop"
+
+
+def test_swap_with_a_new_code_is_an_update():
+    result = _statuses(_IUCN + _CITES + _NZ3.replace("= NV", "= NE"))
+    assert result.action == "update"
+    assert result.after == "{{Speciesbox\n" + _IUCN + _NZ2 + _CITES3 + _TAXON
+
+
+def test_existing_nztcs_status3_behind_another_system_is_updated_in_place():
+    result = _statuses(_IUCN + _TNC + _NZ3.replace("= NV", "= NE"))
+    assert result.action == "update"
+    assert result.after == "{{Speciesbox\n" + _IUCN + _TNC + _NZ3 + _TAXON
 
 
 def test_empty_status2_placeholders_are_filled():

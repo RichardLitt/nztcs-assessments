@@ -115,6 +115,12 @@ case-insensitively, ignoring markup. Anything else goes to `ambiguous`.
    `{{Speciesbox}}` and `{{Subspeciesbox}}` display `status3`. With no empty
    block, nothing changes and the article goes to `ambiguous`
    (`no-free-status-slot`).
+
+   Wikipedia only draws a status graphic for the first two blocks. So when
+   NZTCS would be in `status3` behind CITES, which has no graphic, CITES moves
+   to `status3` with its values unchanged and NZTCS takes `status2`. This also
+   applies to an NZTCS status already in `status3` (action `move` if nothing
+   else changes). Only CITES is ever moved.
 3. **No status**: insert `status`, `status_system`, `status_ref` just before
    the first taxon parameter (`taxon`, `genus`, `species`, `regnum`, an
    `unranked_*` rank and so on), so they sit after the name and image lines.

@@ -24,7 +24,8 @@ under **Full diff**) for checking:
 |---|---|
 | `insert` | The infobox had no status. Three lines are added: `status`, `status_system`, `status_ref`. |
 | `update` | The infobox already had an NZTCS status. The code and/or reference change. |
-| `add_secondary` | The infobox already shows another system (usually IUCN). NZTCS is added alongside in the first free slot: the `status2` lines, or the `status3` lines if `status2` is taken (e.g. by CITES). Existing statuses are untouched. |
+| `add_secondary` | The infobox already shows another system (usually IUCN). NZTCS is added alongside in the first free slot: the `status2` lines, or the `status3` lines if `status2` is taken. If `status2` is CITES, it moves to `status3`, unchanged, so NZTCS can have `status2`. Other statuses stay where they are. |
+| `move` | The NZTCS status is current but sits in `status3`, behind CITES. The two swap places so the NZTCS graphic shows. |
 
 ### 1. Sanity-check the match
 

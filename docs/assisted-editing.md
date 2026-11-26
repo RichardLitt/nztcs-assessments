@@ -86,7 +86,8 @@ Save this edit? [y]es [n]o [d]iff [o]pen [q]uit:
 
 For an article that already has a status from another system, such as IUCN,
 you'll see it unmarked, with the NZTCS lines added as `status2`, or `status3`
-if `status2` is taken. For an
+if `status2` is taken. A CITES status in `status2` moves to `status3`, because
+only the first two statuses show a graphic. For an
 update, the old line is shown with `-` and the new one with `+`. Set
 `NO_COLOR=1` to turn the colours off.
 

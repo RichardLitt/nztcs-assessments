@@ -141,6 +141,8 @@ def edit_summary(entry: Entry, note: str = TOOL_NOTE) -> str:
     status = f"{label} ({entry.status_code})" if label != entry.status_code else label
     if entry.action == "update":
         what = f"Update NZTCS conservation status to {status}"
+    elif entry.action == "move":
+        what = f"Move NZTCS conservation status ({status}) to status2 so its graphic shows"
     elif entry.action == "add_secondary":
         what = f"Add NZTCS conservation status alongside existing status: {status}"
     else:
