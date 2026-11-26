@@ -259,7 +259,7 @@ line: … with: …** instead. The patch action tells you which kind it is:
 |---|---|
 | `insert` | The infobox has no status. Three lines are added. |
 | `update` | The infobox already has an NZTCS status. The code and/or reference change. |
-| `add_secondary` | The infobox already shows another system (usually IUCN). NZTCS is added alongside as `status2`, `status2_system`, `status2_ref`. |
+| `add_secondary` | The infobox already shows another system (usually IUCN). NZTCS is added alongside in the first free slot: `status2`, `status2_system`, `status2_ref`, or the `status3` lines if `status2` is taken (e.g. by CITES). |
 
 ### Making an edit
 

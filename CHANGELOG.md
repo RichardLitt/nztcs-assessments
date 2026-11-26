@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- An existing second status, such as CITES in `status2`, is no longer
+  overwritten. NZTCS goes in `status3` instead, and an NZTCS status already in
+  `status2` or `status3` is updated where it is. If the template has no free
+  slot, the article goes to `ambiguous` as `no-free-status-slot`. A `status`
+  with no `status_system` is also kept. Re-run the review run: `review/` files
+  made before this fix may still replace `status2`.
+
 ### Added
 
 - Reports are listed in `src/nztcs_wiki_bot/reports.yaml`, so adding one no

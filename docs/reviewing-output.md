@@ -24,7 +24,7 @@ under **Full diff**) for checking:
 |---|---|
 | `insert` | The infobox had no status. Three lines are added: `status`, `status_system`, `status_ref`. |
 | `update` | The infobox already had an NZTCS status. The code and/or reference change. |
-| `add_secondary` | The infobox already shows another system (usually IUCN). NZTCS is added alongside as `status2`, `status2_system`, `status2_ref`, leaving the IUCN status untouched. |
+| `add_secondary` | The infobox already shows another system (usually IUCN). NZTCS is added alongside in the first free slot: the `status2` lines, or the `status3` lines if `status2` is taken (e.g. by CITES). Existing statuses are untouched. |
 
 ### 1. Sanity-check the match
 
@@ -124,6 +124,8 @@ content change.
   hand following [Template:Speciesbox](https://en.wikipedia.org/wiki/Template:Speciesbox).
   `taxon-mismatch` usually means the name redirects to a genus or a different
   species. `already-current` needs nothing.
+  `no-free-status-slot` means every status slot the infobox displays holds
+  another system, so you need to decide what to do by hand.
 - **`no_match.tsv`**: no article exists. That's a candidate for a new article,
   but not this tool's job.
 - **`unmapped.tsv`**: there's no Wikipedia code to add. See

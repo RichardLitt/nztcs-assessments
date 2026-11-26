@@ -85,7 +85,8 @@ Save this edit? [y]es [n]o [d]iff [o]pen [q]uit:
 ```
 
 For an article that already has a status from another system, such as IUCN,
-you'll see it unmarked, with the NZTCS lines added as `status2`. For an
+you'll see it unmarked, with the NZTCS lines added as `status2`, or `status3`
+if `status2` is taken. For an
 update, the old line is shown with `-` and the new one with `+`. Set
 `NO_COLOR=1` to turn the colours off.
 
@@ -120,8 +121,8 @@ Conservation's published assessments.
   infobox's genus and species match, and prepares the change. I review every edit and save
   it myself; nothing is saved without my confirmation.
 * '''What it changes:''' only the <code>status</code>, <code>status_system</code> and
-  <code>status_ref</code> lines of the infobox (or <code>status2</code> and so on when the
-  infobox already shows another system). The citation is {{tl|CiteQ}} for the report's
+  <code>status_ref</code> lines of the infobox (or <code>status2</code> or <code>status3</code>
+  and so on when the infobox already shows other systems). The citation is {{tl|CiteQ}} for the report's
   Wikidata item.
 * '''What it skips:''' articles edited since I last checked, articles with {{tl|nobots}},
   and anything it can't match with confidence.

@@ -246,3 +246,56 @@ def test_placement_is_idempotent_for_secondary():
     first = sb.patch_status(wt, "Aenetus", "virescens", "NV", "NZTCS2025", _REF)
     second = sb.patch_status(first.after, "Aenetus", "virescens", "NV", "NZTCS2025", _REF)
     assert second.action == "noop" and second.after == first.after
+
+
+# -- existing statuses from other systems are kept ----------------------------
+
+
+def _statuses(params: str, box: str = "Speciesbox") -> sb.PatchResult:
+    wt = f"{{{{{box}\n{params}| genus = Aenetus\n| species = virescens\n}}}}"
+    return sb.patch_status(wt, "Aenetus", "virescens", "NV", "NZTCS2025", _REF)
+
+
+_IUCN = "| status = VU\n| status_system = IUCN3.1\n| status_ref = <ref>i</ref>\n"
+_CITES = "| status2 = CITES_A3\n| status2_system = CITES \n| status2_ref = <ref>c</ref>\n"
+
+
+def test_occupied_status2_is_kept_and_nztcs_goes_in_status3():
+    result = _statuses(_IUCN + _CITES)
+    assert result.action == "add_secondary"
+    assert _IUCN + _CITES in result.after
+    assert _order(result.after) == [
+        "status", "status_system", "status_ref",
+        "status2", "status2_system", "status2_ref",
+        "status3", "status3_system", "status3_ref", "genus", "species",
+    ]
+
+
+def test_existing_nztcs_status3_is_updated_in_place():
+    first = _statuses(_IUCN + _CITES)
+    assert _statuses(_IUCN + _CITES).after == first.after
+    old = first.after.replace("status3 = NV", "status3 = NE")
+    result = sb.patch_status(old, "Aenetus", "virescens", "NV", "NZTCS2025", _REF)
+    assert result.action == "update" and result.after == first.after
+    again = sb.patch_status(result.after, "Aenetus", "virescens", "NV", "NZTCS2025", _REF)
+    assert again.action == "noop"
+
+
+def test_empty_status2_placeholders_are_filled():
+    result = _statuses(_IUCN + "| status2 =\n| status2_system =\n")
+    assert result.action == "add_secondary"
+    assert "status2 =NV" in result.after
+    assert "status3" not in result.after
+
+
+def test_status_without_system_is_kept():
+    result = _statuses("| status = LC\n")
+    assert "| status = LC\n" in result.after
+    assert "status2 = NV" in result.after
+
+
+def test_no_free_slot_changes_nothing():
+    full = _IUCN + _CITES + "| status3 = G3\n| status3_system = TNC\n"
+    for result in (_statuses(full), _statuses(_IUCN + _CITES, box="Taxobox")):
+        assert result.action == "no_free_slot"
+        assert not result.changed
